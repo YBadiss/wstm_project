@@ -21,4 +21,5 @@ Steps to run on a new machine
 * Edit TOR's config file located in /etc/tor/torrc
 * Uncomment the line "ControlPort 9051"
 * Restart TOR:
+
         sudo /etc/init.d/tor restart
