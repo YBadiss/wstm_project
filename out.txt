@@ -1,0 +1,10 @@
+Connection refused. Is the ControlPort enabled?
+Mon Apr 15 09:23:06 2013 - Starting with 2319 radios...
+0 radios actually hit.
+Mon Apr 15 09:23:09 2013 - End round 1:
+0 radios actually hit.
+Mon Apr 15 09:23:11 2013 - End round 2:
+0 radios actually hit.
+Mon Apr 15 09:23:13 2013 - End round 3:
+0 radios actually hit.
+Mon Apr 15 09:23:15 2013 - End round 4:

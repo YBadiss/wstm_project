@@ -9,7 +9,21 @@ import pdb
 
 #pdb.set_trace();
 
-conn = TorCtl.connect(controlAddr="127.0.0.1", controlPort=9051, passphrase="test")
+class TorConnection:
+  def __init__(self, waitTime):
+    self.conn = TorCtl.connect(controlAddr="127.0.0.1", controlPort=9051, passphrase="test")
+    self.lastChangeId = int(time.time())
+    self.waitTime = waitTime
+
+  def newTorId(self):
+    TorCtl.Connection.send_signal(self.conn, "NEWNYM")
+    self.lastChangeId = int(time.time())
+
+  def isTimeForNewId(self):
+    return (self.waitTime + self.lastChangeId) < time.time()
+
+
+TorConn = TorConnection(60*5)
 
 def create_connection(address, timeout=None, source_address=None):
     sock = socks.socksocket()
@@ -25,10 +39,6 @@ socket.create_connection = create_connection
 # do not move up, needs to stand after the TOR code
 import urllib2
 
-
-def newTorId():
-  global conn
-  TorCtl.Connection.send_signal(conn, "NEWNYM")
 
 def hit_user(u_id, try_cnt = 0):
   hit = ""
@@ -67,8 +77,11 @@ def parse_users():
       print time.asctime(time.localtime(time.time())),"- End round %d:" % (n)
       print "> %d new users" % (len(new_u))
       try:
-        newTorId()
-        print "> New IP: " + urllib2.urlopen("http://api.externalip.net/ip/").read()
+        if TorConn.isTimeForNewId():
+          TorConn.newTorId()
+          print "> New IP: " + urllib2.urlopen("http://api.externalip.net/ip/").read()
+        else:
+          print "Keep same IP"
       except:
         pass
       sys.stdout.flush()
@@ -128,8 +141,11 @@ def parse_playlists():
       print time.asctime(time.localtime(time.time())),"- End round %d:" % (n)
       print "> %d new playlists" % (len(new_u))
       try:
-        newTorId()
-        print "> New IP: " + urllib2.urlopen("http://api.externalip.net/ip/").read()
+        if TorConn.isTimeForNewId():
+          TorConn.newTorId()
+          print "> New IP: " + urllib2.urlopen("http://api.externalip.net/ip/").read()
+        else:
+          print "Keep same IP"
       except:
         pass
       sys.stdout.flush()
@@ -181,8 +197,11 @@ def parse_radios(limit_radios):
       print time.asctime(time.localtime(time.time())),"- End round %d:" % (n)
       print "> %d new radios" % (len(new_u))
       try:
-        newTorId()
-        print "> New IP: " + urllib2.urlopen("http://api.externalip.net/ip/").read()
+        if TorConn.isTimeForNewId():
+          TorConn.newTorId()
+          print "> New IP: " + urllib2.urlopen("http://api.externalip.net/ip/").read()
+        else:
+          print "Keep same IP"
       except:
         pass
       sys.stdout.flush()
@@ -261,10 +280,15 @@ def parse_tracks():
       out = p.map(hit_radio_tracks, radios[(n-1)*ROUND_CNT : min(n*ROUND_CNT, len(radios))])
       print "%d radios actually hit."%(sum([1 if o != None else 0 for o in out]))
       print time.asctime(time.localtime(time.time())),"- End round %d:" % (n)
+      #pdb.set_trace()
       try:
-        newTorId()
-        print "> New IP: " + urllib2.urlopen("http://api.externalip.net/ip/").read()
+        if TorConn.isTimeForNewId():
+          TorConn.newTorId()
+          print "> New IP: " + urllib2.urlopen("http://api.externalip.net/ip/").read()
+        else:
+          print "Keep same IP"
       except:
+				
         pass
       sys.stdout.flush()
   except KeyboardInterrupt:
