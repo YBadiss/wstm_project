@@ -10,8 +10,15 @@ Steps to run on a new machine
 
         sudo apt-get install python-socksipy
 
-* Install TorCtl (sudo apt-get install python-torctl)
-* Install TOR (sudo apt-get install tor)
+* Install TorCtl:
+
+        sudo apt-get install python-torctl
+
+* Install TOR:
+
+        sudo apt-get install tor
+
 * Edit TOR's config file located in /etc/tor/torrc
 * Uncomment the line "ControlPort 9051"
-* Restart TOR (sudo /etc/init.d/tor restart)
+* Restart TOR:
+        sudo /etc/init.d/tor restart
