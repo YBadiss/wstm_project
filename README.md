@@ -7,7 +7,9 @@ Steps to run on a new machine
 -----------------------------
 
 * Install SocksiPy:
-		sudo apt-get install python-socksipy
+
+        sudo apt-get install python-socksipy
+
 * Install TorCtl (sudo apt-get install python-torctl)
 * Install TOR (sudo apt-get install tor)
 * Edit TOR's config file located in /etc/tor/torrc
