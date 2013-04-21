@@ -23,7 +23,7 @@ class TorConnection:
     return (self.waitTime + self.lastChangeId) < time.time()
 
 
-TorConn = TorConnection(60*5)
+TorConn = TorConnection(60)
 
 def create_connection(address, timeout=None, source_address=None):
     sock = socks.socksocket()
@@ -257,7 +257,7 @@ def hit_radio_tracks(r_id, try_cnt = 0):
     if "error" in hit:
       raise Exception("Error from Deezer (on %d) - %s"%(r_id,hit["error"]))
   except Exception, e:
-    if try_cnt > 20:
+    if try_cnt > 5:
       sys.stderr.write("Could not get %d - %s"%(r_id,e))
       return None
     return hit_radio_tracks(try_cnt, try_cnt + 1)

@@ -74,3 +74,40 @@ Keep same IP
 0 radios actually hit.
 Sun Apr 21 14:50:06 2013 - End round 12:
 Keep same IP
+
+Sun Apr 21 13:01:02 UTC 2013
+Sun Apr 21 13:01:02 2013 - Starting with 2319 radios...
+0 radios actually hit.
+Sun Apr 21 13:01:27 2013 - End round 1:
+Keep same IP
+0 radios actually hit.
+Sun Apr 21 13:02:15 2013 - End round 2:
+Keep same IP
+0 radios actually hit.
+Sun Apr 21 13:02:27 2013 - End round 3:
+Keep same IP
+0 radios actually hit.
+Sun Apr 21 13:03:01 2013 - End round 4:
+Keep same IP
+0 radios actually hit.
+Sun Apr 21 13:03:16 2013 - End round 5:
+Keep same IP
+1 radios actually hit.
+Sun Apr 21 13:03:32 2013 - End round 6:
+Keep same IP
+1 radios actually hit.
+Sun Apr 21 13:03:58 2013 - End round 7:
+Keep same IP
+0 radios actually hit.
+Sun Apr 21 13:04:15 2013 - End round 8:
+Keep same IP
+0 radios actually hit.
+Sun Apr 21 13:04:32 2013 - End round 9:
+Keep same IP
+0 radios actually hit.
+Sun Apr 21 13:04:47 2013 - End round 10:
+Keep same IP
+4 radios actually hit.
+Sun Apr 21 13:05:07 2013 - End round 11:
+Keep same IP
+NOTICE[Sun Apr 21 13:05:07 2013]:Tor closed control connection. Exiting event thread.
