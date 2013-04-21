@@ -1,6 +1,6 @@
 #!/bin/sh
 
-cd /home/ubuntu/WSTM/wstm_project
+cd /home/yacine/Documents/WSTM/wstm_project
 
 if [ ! -f ./lock ];
 then
