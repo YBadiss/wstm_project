@@ -221,7 +221,7 @@ def get_radios():
 
 
 def get_radio_file(r_id):
-  f = "./radios/radio%d/%s"%(r_id, time.strftime("%d_%H_%M_%S"))
+  f = "./radios/radio%d/%s.json"%(r_id, time.strftime("%d_%H_%M_%S"))
   d = os.path.dirname(f)
   if not os.path.exists(d):
     os.makedirs(d)
@@ -240,7 +240,7 @@ def update_hit_radio_time(r_id, total_duration):
     f.write(str(int(time.time()) + total_duration))
 
 def getSlot(t):
-  hour = float(gmtime(t).tm_hour)
+  hour = float(time.gmtime(t).tm_hour)
   return int(hour / 3.0)
 
 
@@ -254,15 +254,13 @@ def hit_radio_tracks(r_id, try_cnt = 0):
     hit = json.loads(urllib2.urlopen("http://api.deezer.com/2.0/radio/" + str(r_id) + "/tracks").read())
     if len(hit) == 0:
       raise Exception("No Content from %d"%(r_id))
-    if "error" in hit and hit["error"]["type"] != "DataException":
+    if "error" in hit:
       raise Exception("Error from Deezer (on %d) - %s"%(r_id,hit["error"]))
   except Exception, e:
     if try_cnt > 20:
       sys.stderr.write("Could not get %d - %s"%(r_id,e))
       return None
     return hit_radio_tracks(try_cnt, try_cnt + 1)
-  if "error" in hit:
-    return None
   
   S_result = []
   a_result = {}
@@ -281,7 +279,7 @@ def hit_radio_tracks(r_id, try_cnt = 0):
 
  
 def parse_tracks():
-  pdb.set_trace()
+  #pdb.set_trace()
   radios = get_radios()
   print time.asctime(time.localtime(time.time())),"- Starting with %d radios..." % (len(radios))
   p = Pool(200)
