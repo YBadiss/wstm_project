@@ -111,3 +111,40 @@ Keep same IP
 Sun Apr 21 13:05:07 2013 - End round 11:
 Keep same IP
 NOTICE[Sun Apr 21 13:05:07 2013]:Tor closed control connection. Exiting event thread.
+
+Sun Apr 21 13:30:09 UTC 2013
+Connection refused. Is the ControlPort enabled?
+Sun Apr 21 13:30:20 2013 - Starting with 2319 radios...
+
+Sun Apr 21 14:13:02 UTC 2013
+ * Stopping tor daemon...
+   ...fail!
+ * Starting tor daemon...
+   ...done.
+Sun Apr 21 14:13:25 2013 - Starting with 2319 radios...
+69 radios actually hit.
+Sun Apr 21 14:14:03 2013 - End round 1:
+Keep same IP
+NOTICE[Sun Apr 21 14:14:25 2013]:Tor closed control connection. Exiting event thread.
+
+Sun Apr 21 14:30:01 UTC 2013
+ * Stopping tor daemon...
+   ...done.
+ * Starting tor daemon...
+   ...done.
+Sun Apr 21 14:30:04 2013 - Starting with 2319 radios...
+60 radios actually hit.
+Sun Apr 21 14:30:24 2013 - End round 1:
+Keep same IP
+38 radios actually hit.
+Sun Apr 21 14:30:38 2013 - End round 2:
+Keep same IP
+NOTICE[Sun Apr 21 14:30:39 2013]:Tor closed control connection. Exiting event thread.
+
+Sun Apr 21 14:37:01 UTC 2013
+ * Stopping tor daemon...
+   ...fail!
+ * Starting tor daemon...
+   ...done.
+Sun Apr 21 14:37:04 2013 - Starting with 2319 radios...
+NOTICE[Sun Apr 21 14:37:06 2013]:Tor closed control connection. Exiting event thread.

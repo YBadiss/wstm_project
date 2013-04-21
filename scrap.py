@@ -23,7 +23,7 @@ class TorConnection:
     return (self.waitTime + self.lastChangeId) < time.time()
 
 
-TorConn = TorConnection(60)
+TorConn = TorConnection(0)
 
 def create_connection(address, timeout=None, source_address=None):
     sock = socks.socksocket()
