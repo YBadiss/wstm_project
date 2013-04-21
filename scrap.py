@@ -239,11 +239,17 @@ def update_hit_radio_time(r_id, total_duration):
   with open(f, "w") as f:
     f.write(str(int(time.time()) + total_duration))
 
+def getSlot(t):
+  hour = float(gmtime(t).tm_hour)
+  return int(hour / 3.0)
+
 
 def hit_radio_tracks(r_id, try_cnt = 0):
   if not do_hit_radio(r_id):
     return None
   hit = ""
+  now = int(time.time())
+
   try:
     hit = json.loads(urllib2.urlopen("http://api.deezer.com/2.0/radio/" + str(r_id) + "/tracks").read())
     if len(hit) == 0:
@@ -257,28 +263,42 @@ def hit_radio_tracks(r_id, try_cnt = 0):
     return hit_radio_tracks(try_cnt, try_cnt + 1)
   if "error" in hit:
     return None
-  tracks = [{"id": track["id"]} for track in hit["data"]]
-
+  
+  S_result = []
+  a_result = {}
+  total_time = 0
+  for track in hit["data"]:
+    S_result.append({"tid": track["id"], "duration": track["duration"], "slot": getSlot(now+total_time)})
+    a_result[track["id"]] = track["artist"]["id"]
+    total_time += track["duration"]
+    
   text_file = open(get_radio_file(r_id) , "w")
-  text_file.write(json.dumps(tracks))
+  text_file.write(json.dumps(S_result))
   text_file.close()
 
-  update_hit_radio_time(r_id, sum([int(track["duration"]) for track in hit["data"]]))
-  return tracks 
+  update_hit_radio_time(r_id, total_time)
+  return a_result
 
  
 def parse_tracks():
+  pdb.set_trace()
   radios = get_radios()
   print time.asctime(time.localtime(time.time())),"- Starting with %d radios..." % (len(radios))
   p = Pool(200)
   n = 0
   ROUND_CNT = 200
   FOLDERNAME = "radio%d"
+  artist_map = readArtistMap()
+  
   try:
     while n*ROUND_CNT < len(radios):
       n += 1
       out = p.map(hit_radio_tracks, radios[(n-1)*ROUND_CNT : min(n*ROUND_CNT, len(radios))])
-      print "%d radios actually hit."%(sum([1 if o != None else 0 for o in out]))
+      result = [e for e in out if e]
+      print "%d radios actually hit."%(len(result))
+      for r in result:
+        artist_map.update(r)
+
       print time.asctime(time.localtime(time.time())),"- End round %d:" % (n)
       #pdb.set_trace()
       try:
@@ -288,12 +308,27 @@ def parse_tracks():
         else:
           print "Keep same IP"
       except:
-				
         pass
       sys.stdout.flush()
   except KeyboardInterrupt:
     print "End"
+  writeArtistMap(artist_map)
 
+def readArtistMap():
+  f = "./artists/artist_map.json"
+  if os.path.exists(f):
+    with open(f, "r") as f:
+      return json.loads(f.read())
+  return {}
+
+def writeArtistMap(a_map):
+  f = "./artists/artist_map.json"
+  d = os.path.dirname(f)
+  if not os.path.exists(d):
+    os.makedirs(d)
+  with open(f, "w") as f:
+    f.write(json.dumps(a_map))
+  
 
 if __name__ == "__main__":
   #parse_users()
