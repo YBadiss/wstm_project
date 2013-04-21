@@ -51,7 +51,7 @@ def hit_radio_tracks(r_id):
     a_result = {}
     total_time = 0
     for track in hit["data"]:
-      S_result.append({"tid": track["id"], "time": start+total_time, "slot": getSlot(start+total_time)})
+      S_result.append({"tid": track["id"], "time": start+total_time})
       a_result[track["id"]] = track["artist"]["id"]
       total_time += track["duration"]
     text_file = open(get_radio_file(r_id) , "w")
