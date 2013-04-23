@@ -5,9 +5,11 @@ cd /home/yacine/Documents/WSTM/wstm_project
 if [ ! -f ./lock ];
 then
 	touch ./lock
-	echo 
-	echo $(date)
-	sudo /etc/init.d/tor restart
-	sudo python scrap.py
+	filename=$(date +"%Y-%m-%d-%H-%M-%S")
+	echo $(date) > ./log/$filename.out
+	echo $(date) > ./log/$filename.err
+	sudo python scrap.py > ./log/$filename.out 2> ./log/$filename.err
+	sudo mail -s "$filename OUT" "yacine.badiss+logs@gmail.com , romain.yon+logs@gmail.com" < ./log/$filename.out
+	sudo mail -s "$filename ERR" "yacine.badiss+logs@gmail.com , romain.yon+logs@gmail.com" < ./log/$filename.err
 	rm ./lock
 fi

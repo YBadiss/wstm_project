@@ -37,7 +37,7 @@ def hit_playlist(pid):
 def hit_radios(r_id):
   hit = doHit("radio/" + str(r_id))
   if hit:
-    return {r_id: {"title": hit["title"], "description": hit["description"]}} 
+    return r_id 
   else:
     return None
 
@@ -142,50 +142,38 @@ def parse_playlists():
     print "End"
 
 
-def parse_radios(limit_radios):
-  radios = range(1,limit_radios+1)
-  print time.asctime(time.localtime(time.time())),"- Starting with %d radios..." % (len(radios))
+def parse_radios(f):
+  print time.asctime(time.localtime(time.time())),"- Starting parsing radios..."
   p = Pool(200)
   n = 0
-  ROUND_CNT = 600
-  FILENAME = "radios-p%d.json"
+  ROUND_CNT = 1000
+  result = []
+  keep_parsing = True
   try:
-    while n*ROUND_CNT < len(radios):
+    while keep_parsing:
       n += 1
-      out = p.map(hit_radios, radios[(n-1)*ROUND_CNT : min(n*ROUND_CNT, len(radios))])
-      new_u = {}
-      for o in out:
-        if o != None:
-          for u in o: 
-            new_u[u] = o[u]
-      text_file = open(FILENAME % n, "w")
-      text_file.write(json.dumps(new_u))
-      text_file.close()
+      out = p.map(hit_radios, xrange((n-1)*ROUND_CNT,n*ROUND_CNT))
+      new_r = [r for r in out if r]
+      result += new_r
       print time.asctime(time.localtime(time.time())),"- End round %d:" % (n)
-      print "> %d new radios" % (len(new_u))
-      try:
-        if TorConn.isTimeForNewId():
-          TorConn.newTorId()
-          print "> New IP: " + urllib2.urlopen("http://api.externalip.net/ip/").read()
-        else:
-          print "Keep same IP"
-      except:
-        pass
+      print "> %d new radios" % (len(new_r))
       sys.stdout.flush()
+      keep_parsing = len(new_r) > 0 
   except KeyboardInterrupt:
     print "End"
+  
+  d = os.path.dirname(f)
+  if not os.path.exists(d):
+    os.makedirs(d)
+  with open(f, "w") as fd:
+      fd.write(json.dumps(result))
 
 
-def get_radios():
-  RADIOS_FILENAME = "radios-p"
-  radio_files = [each for each in os.listdir(".") if each.startswith(RADIOS_FILENAME)]
-  radios = []
-  for filename in radio_files:
-    with open(filename, 'r') as content_file:
-      content = json.loads(content_file.read())
-      radios += [int(r) for r in content]
-  return radios
-
+def get_radios(f):
+  if os.path.exists(f):
+    with open(f, "r") as fd:
+      return json.loads(fd.read())
+  return []
 
 def get_radio_file(r_id):
   f = "./radios/radio%d/%s.json"%(r_id, time.strftime("%d_%H_%M_%S"))
@@ -210,11 +198,11 @@ def getSlot(t):
   hour = float(time.gmtime(t).tm_hour)
   return int(hour / 3.0)
 
-def parse_tracks():
+def parse_tracks(radio_file):
   #pdb.set_trace()
-  radios = get_radios()
+  radios = get_radios(radio_file)
   print time.asctime(time.localtime(time.time())),"- Starting with %d radios..." % (len(radios))
-  p = Pool(200)
+  p = Pool(30)
   n = 0
   ROUND_CNT = 200
   FOLDERNAME = "radio%d"
@@ -265,4 +253,7 @@ if __name__ == "__main__":
   #parse_playlists()
   #parse_radios(60000)
   #hit_radio_tracks(6)
-  parse_tracks()
+  radio_file = "./radios/radios.json"
+  if not os.path.exists(radio_file):
+    parse_radios(radio_file)
+  parse_tracks(radio_file)
