@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from helper_tor import *
 
+
 def doHit(url, max_try = 5):
   try_cnt = 0
   err = ""
@@ -230,14 +231,14 @@ def parse_tracks():
 
       print time.asctime(time.localtime(time.time())),"- End round %d:" % (n)
       #pdb.set_trace()
-      try:
-        if TorConn.isTimeForNewId():
-          TorConn.newTorId()
-          print "> New IP: " + urllib2.urlopen("http://api.externalip.net/ip/").read()
-        else:
-          print "Keep same IP"
-      except:
-        pass
+      # try:
+      #   if TorConn.isTimeForNewId():
+      #     TorConn.newTorId()
+      #     print "> New IP: " + urllib2.urlopen("http://api.externalip.net/ip/").read()
+      #   else:
+      #     print "Keep same IP"
+      # except:
+      #   pass
       sys.stdout.flush()
   except KeyboardInterrupt:
     print "End"

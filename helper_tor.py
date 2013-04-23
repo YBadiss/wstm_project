@@ -23,18 +23,18 @@ class TorConnection:
     return (self.waitTime + self.lastChangeId) < time.time()
 
 
-TorConn = TorConnection(0)
+# TorConn = TorConnection(0)
 
-def create_connection(address, timeout=None, source_address=None):
-    sock = socks.socksocket()
-    sock.connect(address)
-    return sock
+# def create_connection(address, timeout=None, source_address=None):
+#     sock = socks.socksocket()
+#     sock.connect(address)
+#     return sock
 
-socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, "127.0.0.1", 9050)
+# socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, "127.0.0.1", 9050)
 
-# patch the socket module
-socket.socket = socks.socksocket
-socket.create_connection = create_connection
+# # patch the socket module
+# socket.socket = socks.socksocket
+# socket.create_connection = create_connection
 
 # do not move up, needs to stand after the TOR code
 import urllib2
