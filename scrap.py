@@ -144,9 +144,9 @@ def parse_playlists():
 
 def parse_radios(f):
   print time.asctime(time.localtime(time.time())),"- Starting parsing radios..."
-  p = Pool(200)
+  p = Pool(20)
   n = 0
-  ROUND_CNT = 1000
+  ROUND_CNT = 200
   result = []
   keep_parsing = True
   try:
@@ -158,10 +158,12 @@ def parse_radios(f):
       print time.asctime(time.localtime(time.time())),"- End round %d:" % (n)
       print "> %d new radios" % (len(new_r))
       sys.stdout.flush()
-      keep_parsing = len(new_r) > 0 
+      keep_parsing = len(new_r) > 0
+      #time.sleep()
   except KeyboardInterrupt:
     print "End"
-  
+ 
+  pdb.set_trace() 
   d = os.path.dirname(f)
   if not os.path.exists(d):
     os.makedirs(d)
@@ -202,7 +204,7 @@ def parse_tracks(radio_file):
   #pdb.set_trace()
   radios = get_radios(radio_file)
   print time.asctime(time.localtime(time.time())),"- Starting with %d radios..." % (len(radios))
-  p = Pool(30)
+  p = Pool(20)
   n = 0
   ROUND_CNT = 200
   FOLDERNAME = "radio%d"
