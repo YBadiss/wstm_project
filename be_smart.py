@@ -75,7 +75,7 @@ I = () # TODO: compute
 def update_I(I, r, s, i, t, pis):
   MAX_SIZE = 1000
   while len(I) < MAX_SIZE and sum([math.exp(r(s,j,t)) for j in I]) <= math.exp(r(s,i,y)):
-    I.extend([uniform_sample_i(pis) for k in xrange(10)])
+    I.extend([helpers.uniform_sample_i(pis) for k in xrange(10)])
 
 # leaning rate
 eta = lambda k: 0.005 / float(k)
