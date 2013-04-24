@@ -26,7 +26,7 @@ def ca(n_a):
   return random(n_a)
 
 def pis(ps):
-  c = Counter([[i["tid"] for i in l] for l in ps.values()])
+  c = Counter(reduce(list.__add__,[[i["tid"] for i in l] for l in ps.values()],[]))
   cnt = 0
   out = []
   l = sum(c.values())
