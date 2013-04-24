@@ -10,8 +10,9 @@ then
 	echo $(date) > ./log/$filename.err
 	sudo python scrap.py > ./log/$filename.out 2> ./log/$filename.err
 	
-	lines=$(cat ./log/$filename.err | grep "DataException" | wc -l)
+	nb_errors=$(cat ./log/$filename.err | wc -l)
+	nb_data_errors=$(cat ./log/$filename.err | grep "DataException" | wc -l)
 	sudo mail -s "$filename OUT" "yacine.badiss+logs@gmail.com , romain.yon+logs@gmail.com" < ./log/$filename.out
-	sudo mail -s "$filename ERR - $line" "yacine.badiss+logs@gmail.com , romain.yon+logs@gmail.com" < ./log/$filename.err
+	sudo mail -s "$filename ERR - $nb_data_errors/$nb_errors" "yacine.badiss+logs@gmail.com , romain.yon+logs@gmail.com" < ./log/$filename.err
 	rm ./lock
 fi
