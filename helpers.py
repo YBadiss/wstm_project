@@ -12,7 +12,7 @@ def uniform_sample_i(pis):
 	return pis[min(bisect_left(frequencies, random()),len(pis)-1)][1]
 
 # set of items played on station s, between t-w and t
-def pstw(ps,w,t):
+def pstw(ps,t,w = 30*60):
   pstw = {}
   for s in ps:
     times = [track["time"] for track in ps[s]]

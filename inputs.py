@@ -16,7 +16,7 @@ def ps(S):
   for s in S:
     ret_ps[s] = []
     for filename in os.listdir(directory%(s)):
-      f_content = loadJSON(filename) if filename.endswith(".json") else None
+      f_content = loadJSON(directory%(s) + filename) if filename.endswith(".json") else None
       if f_content:
         ret_ps[s].extend(f_content)
   return ret_ps
