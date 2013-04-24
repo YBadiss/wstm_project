@@ -21,9 +21,6 @@ def ps(S):
         ret_ps[s].extend(f_content)
   return ret_ps
 
-def pis(ps):
-	
-
 def loadJSON(filename):
   if os.path.exists(filename):
     with open(filename, "r") as fd:

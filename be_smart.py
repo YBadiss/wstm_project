@@ -65,7 +65,7 @@ rsit = lambda s,i,t: bi(i) + np.transpose(qi(i)) * (vs[s] + vsk[s, slot[t]] + su
 pist = lambda i,s,t: math.exp(r(s,i,t)) / sum([math.exp(r(s,j,t)) for j,_t in ps[s]]) # TODO: Check the loop 
 
 # probability to uniformly draw i in the training set (empirical frequency of i)
-pis = lambda i: I_L.count(i) / len(I_L) # TODO: compute count(i) / len
+pis = init.pis(ps)
 
 # weights
 #wist = lambda i,s,t: math.exp(r(s,i,t))/pis(i) / sum([math.exp(r(s,j,t))/pis(j) for j,_t in ps[s]]) # TODO: Check the loop 
