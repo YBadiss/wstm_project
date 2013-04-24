@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 import numpy as np
+from collections import Counter
 
 # Generate a matrix full of values uniformally distributed in [-1;1]
 def random(*args):
-  cap = numpy.vectorize(lambda x: max(min(x,1),-1))
-  return np.random.randn(*args)
+  cap = np.vectorize(lambda x: max(min(x,1),-1))
+  return cap(np.random.randn(*args))
 
 def pi(n_i,n_l):
   return random(n_i,n_l)
@@ -25,5 +26,12 @@ def ca(n_a):
   return random(n_a)
 
 def pis(ps):
-  return 
+  c = Counter([[i["id"] for i in l] for l in ps.values()])
+  cnt = 0
+  out = []
+  l = sum(c.values())
+  for i,n in sorted(c.items()):
+    cnt += n
+    out.append((n/float(l),i))
+  return out
 
