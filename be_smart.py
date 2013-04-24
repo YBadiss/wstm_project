@@ -68,7 +68,8 @@ pist = lambda i,s,t: math.exp(r(s,i,t)) / sum([math.exp(r(s,j,t)) for j,_t in ps
 pis = lambda i: I_L.count(i) / len(I_L) # TODO: compute count(i) / len
 
 # weights
-wist = lambda i,s,t: math.exp(r(s,i,t))/pis(i) / sum([math.exp(r(s,j,t))/pis(j) for j,_t in ps[s]]) # TODO: Check the loop 
+#wist = lambda i,s,t: math.exp(r(s,i,t))/pis(i) / sum([math.exp(r(s,j,t))/pis(j) for j,_t in ps[s]]) # TODO: Check the loop 
+wist = 0.0001
 
 # set of items uniformly drawn from the training set (with replacement)
 I = () # TODO: compute
