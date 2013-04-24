@@ -2,12 +2,8 @@
 import numpy as np
 
 # Generate a matrix full of values uniformally distributed in [-1;1]
-def random(n):
-  return (2 * np.random.rand(n)) - 1
-def random(n,m):
-  return (2 * np.random.rand(n,m)) - 1
-def random(n,m,k):
-  return (2 * np.random.rand(n,m,k)) - 1
+def random(*args):
+  return (2 * np.random.rand(*args)) - 1
 
 def pi(n_i,n_l):
   return random(n_i,n_l)
