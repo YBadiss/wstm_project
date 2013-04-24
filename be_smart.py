@@ -7,14 +7,6 @@ import init, inputs, helpers
 # Start input variables 
 ################################################
 
-# Number of 
-n_l = 7      # latent factors
-n_i = 10     # items
-n_a = 3      # artists
-n_s = 2      # playlists
-n_slots = 8  # slots
-w = 30*60    # time window 3O mins
-
 # training of stationIds
 S = inputs.S() # set of stationIds
 
@@ -23,6 +15,14 @@ ps = inputs.ps(S) # hash of set (of size 2)
 
 # artist that has producted track i
 ai = inputs.ai() # simple hash table tid : aid
+
+# Number of 
+n_l = 20      # latent factors
+n_i = len(ai)     # items
+n_a = len(set([artist for artist in ai.values()]))      # artists
+n_s = len(S)      # playlists
+n_slots = 8  # slots
+w = 30*60    # time window 3O mins
 
 ################################################
 # End input variables 
