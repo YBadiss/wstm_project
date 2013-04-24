@@ -7,14 +7,19 @@ import init, inputs, helpers
 # Start input variables 
 ################################################
 
+# artist that has producted track i
+ai = inputs.ai() # simple hash table tid : aid
+
 # training of stationIds
 S = inputs.S() # set of stationIds
 
+# Id mapping dicts
+ids_to_item, item_to_ids = helpers.pack(ai.keys())
+ids_to_a, a_to_ids = helpers.pack(ai.values())
+ids_to_s ,s_to_ids = helpers.pack(list(S))
+
 # set of songs,time played by station s
 ps = inputs.ps(S) # hash of set (of size 2)
-
-# artist that has producted track i
-ai = inputs.ai() # simple hash table tid : aid
 
 # Number of 
 n_l = 20      # latent factors
