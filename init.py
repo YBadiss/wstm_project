@@ -3,7 +3,8 @@ import numpy as np
 
 # Generate a matrix full of values uniformally distributed in [-1;1]
 def random(*args):
-  return (2 * np.random.rand(*args)) - 1
+  cap = numpy.vectorize(lambda x: max(min(x,1),-1))
+  return np.random.randn(*args)
 
 def pi(n_i,n_l):
   return random(n_i,n_l)
@@ -22,4 +23,7 @@ def ci(n_i):
 
 def ca(n_a):
   return random(n_a)
+
+def pis(ps):
+  return 
 
