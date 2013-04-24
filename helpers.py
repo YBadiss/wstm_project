@@ -21,3 +21,11 @@ def pstw(ps,t,w = 30*60):
     pstw[s] = ps[s][start : min(end , len(ps[s]))]
   return pstw
 
+def pack(l):
+  sl = sorted(l)
+  dl = {}
+  for i in xrange(len(sl)):
+    dl[sl[i]] = i
+  return sl,dl
+
+
