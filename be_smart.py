@@ -30,7 +30,6 @@ ps = inputs.ps(S, item_to_ids, ids_to_s) # hash of set (of size 2)
 n_l = 20      # latent factors
 n_i = len(ai)     # items
 n_a = len(set(ai.values()))      # artists
-print n_a
 n_s = len(S)      # playlists
 n_slots = 8  # slots
 w = 30*60    # time window 3O mins
@@ -73,32 +72,33 @@ bi = lambda i: ci[i] + ca[ai[i]]
 rsit = lambda s,i,t: bi(i) + np.dot(np.transpose(qi(i)),(vs[s] + vsk[s, slot(t)] + sum([qi(j) for j in pstw(ps,t)])/math.sqrt(len(pstw(ps,t)))))
 
 # probability that the item i will be played on station s at time t
-pist = lambda i,s,t: np.exp(r(s,i,t)) / sum([np.exp(r(s,track["tid"],track["time"])) for track in ps[s]]) # TODO: Check the loop 
+pist = lambda i,s,t: np.exp(rsit(s,i,t)) / sum([np.exp(rsit(s,track["tid"],track["time"])) for track in ps[s]]) # TODO: Check the loop 
 
 # probability to uniformly draw i in the training set (empirical frequency of i)
 pis = init.pis(ps)
 
 # weights
-wist = lambda i,s,t: np.exp(r(s,i,t))/pis(i) / sum([np.exp(r(s,track["tid"],track["time"]))/pis(track["tid"]) for track in ps[s]]) # TODO: Check the loop 
+wist = lambda i,s,t: np.exp(rsit(s,i,t))/pis[i] / sum([np.exp(rsit(s,track["tid"],track["time"]))/pis[track["tid"]] for track in ps[s]]) # TODO: Check the loop 
 
 # set of items uniformly drawn from the training set (with replacement)
 I = [] # TODO: compute
-def update_I(I, r, s, i, t, pis):
+def update_I(I, rsit, s, i, t, pis):
   MAX_SIZE = 1000
   global ai 
   try:
-    while len(I) < MAX_SIZE and sum([np.exp(r(s,j,t)) for j in I]) <= np.exp(r(s,i,t)):
+    while len(I) < MAX_SIZE and sum([np.exp(rsit(s,j,t)) for j in I]) <= np.exp(rsit(s,i,t)):
       I.extend([helpers.uniform_sample_i(pis) for k in xrange(10)])
+      I = list(set(I))
   except:
-    print "Error: shape(r) => ", np.shape(r(s,i,t))
+    print "Error: shape(rsit) => ", np.shape(rsit(s,i,t))
     raise
 
 # leaning rate
 eta = lambda k: 0.005 / float(k)
 
 # differenciation
-dr_pi = lambda s,i,t: (vs[s] + vsk[s, slot[t]] + sum([qi(j) for j in pstw(ps,t)])/math.sqrt(len(pstw(ps,t)))) + np.transpose(qi(i))*(1/math.sqrt(len(pstw(ps,t))) if i in pstw(ps,t) else 0)
-dr_pa = lambda s,i,t: (vs[s] + vsk[s, slot[t]] + sum([qi(j) for j in pstw(ps,t)])/math.sqrt(len(pstw(ps,t)))) + np.transpose(qi(i))*(1/math.sqrt(len(pstw(ps,t))) if i in pstw(ps,t) else 0)
+dr_pi = lambda s,i,t: (vs[s] + vsk[s, slot(t)] + sum([qi(j) for j in pstw(ps,t)])/math.sqrt(len(pstw(ps,t)))) + np.transpose(qi(i))*(1/math.sqrt(len(pstw(ps,t))) if i in pstw(ps,t) else 0)
+dr_pa = lambda s,i,t: (vs[s] + vsk[s, slot(t)] + sum([qi(j) for j in pstw(ps,t)])/math.sqrt(len(pstw(ps,t)))) + np.transpose(qi(i))*(1/math.sqrt(len(pstw(ps,t))) if i in pstw(ps,t) else 0)
 dr_vs = lambda s,i,t: np.transpose(qi(i))
 dr_vsk = lambda s,i,t: np.transpose(qi(i))
 dr_ci = lambda s,i,t: 1
