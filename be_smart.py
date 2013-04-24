@@ -2,6 +2,7 @@
 
 import helper_parameters as h_params
 import numpy as np
+import init
 
 ################################################
 # Start input variables 
@@ -14,42 +15,42 @@ n_a = 3      # artists
 n_s = 2      # playlists
 n_slots = 8  # slots
 
-# latent factor vector for items
-pi = np.array((n_i, n_l))
-
-# latent factor vector for artists 
-pa = np.array((n_a, n_l))
-
-# latent factor vector for station s
-vs = np.array((n_s, n_l))
-
-# latent factor vector for station s at time slot k
-vsk = np.array((n_s,n_slots,n_l)) #3D matrix
-
-# bias for item i
-ci = np.array((n_i))
-
-# bias for artist a
-ca = np.array((n_a))
-
-# artist that has producted track i
-ai = h_params.load_ai() # simple hash table tid : aid
-
-# slot time
-slot = {}
-
-# set of items played on station s, between t-w and t
-pstw = {} # hash table of hash table of sets 
-
 # training of stationIds
 S = h_params.load_S() # set of stationIds
 
 # set of songs,time played by station s
 ps = h_params.load_ps(S) # hash of set (of size 2)
 
+# artist that has producted track i
+ai = h_params.load_ai() # simple hash table tid : aid
+
 ################################################
 # End input variables 
 ################################################
+
+# latent factor vector for items
+pi = init.pi(n_i, n_l)
+
+# latent factor vector for artists 
+pa = init.pa(n_a, n_l)
+
+# latent factor vector for station s
+vs = init.vs(n_s, n_l)
+
+# latent factor vector for station s at time slot k
+vsk = init.vsk(n_s,n_slots,n_l) #3D matrix
+
+# bias for item i
+ci = init.ci(n_i)
+
+# bias for artist a
+ca = init.ca(n_a)
+
+# slot time
+slot = {}
+
+# set of items played on station s, between t-w and t
+pstw = {} # hash table of hash table of sets 
 
 # artist enhanced latent factors of the item
 qi = lambda i: pi[i] + pa[ai[i]]
@@ -90,18 +91,21 @@ dr_ca = lambda s,i,t: 1
 delta_teta = lambda s,i,t,dr_teta,k: eta(k) * (dr_teta(s,i,t) - sum([wist(j,s,t) for j in I]) * dr_teta(s,i,t))
 
 # learning
-STEP_CNT = 20
-for k in xrange(1, STEP_CNT + 1):
-  for s in S:
-    for i,t in ps(s):
-      for var, d in ((pi,dr_pi),
-                    (pa,dr_pa),
-                    (vs,dr_vs),
-                    (vsk,dr_vsk),
-                    (ci,dr_ci),
-                    (ca,dr_ca)):
-        var += delta_teta(s,i,t,d,k) # CORRECTION: the parameters are not EQUAL to detla_teta instead we add the delta to the original value
+def doit():
+  global S,ps,pi,dr_pi,pa,dr_pa,vs,dr_vs,vsk,dr_vsk,ci,dr_ci,ca,dr_ca
+  STEP_CNT = 20
+  for k in xrange(1, STEP_CNT + 1):
+    for s in S:
+      for i,t in ps(s):
+        for var, d in ((pi,dr_pi),
+                      (pa,dr_pa),
+                      (vs,dr_vs),
+                      (vsk,dr_vsk),
+                      (ci,dr_ci),
+                      (ca,dr_ca)):
+          var += delta_teta(s,i,t,d,k) # CORRECTION: the parameters are not EQUAL to detla_teta instead we add the delta to the original value
 
 
-
+if __name__ == "__main__":
+    doit()
 
