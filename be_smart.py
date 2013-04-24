@@ -2,6 +2,7 @@
 
 import numpy as np
 import init, inputs, helpers
+import math
 
 ################################################
 # Start input variables 
@@ -41,10 +42,10 @@ vs = init.vs(n_s, n_l)
 vsk = init.vsk(n_s,n_slots,n_l) #3D matrix
 
 # bias for item i
-ci = init.ci(n_i)
+ci = init.ci(max([int(item) for item in ai])+1)
 
 # bias for artist a
-ca = init.ca(n_a)
+ca = init.ca(max(ai.values())+1)
 
 # slot time
 slot = helpers.slot
@@ -56,7 +57,7 @@ pstw = helpers.pstw # hash table of hash table of sets
 qi = lambda i: pi[i] + pa[ai[i]]
 
 # artist enhanced bias: 
-bi = lambda i: ci[i] + ci[ai[i]]
+bi = lambda i: ci[i] + ca[ai[i]]
 
 # affinity function
 rsit = lambda s,i,t: bi(i) + np.transpose(qi(i)) * (vs[s] + vsk[s, slot[t]] + sum([qi(j) for j in pstw(ps,t)])/math.sqrt(len(pstw(ps,t))))
@@ -74,7 +75,7 @@ wist = lambda i,s,t: math.exp(r(s,i,t))/pis(i) / sum([math.exp(r(s,track["tid"],
 I = () # TODO: compute
 def update_I(I, r, s, i, t, pis):
   MAX_SIZE = 1000
-  while len(I) < MAX_SIZE and sum([math.exp(r(s,j,t)) for j in I]) <= math.exp(r(s,i,y)):
+  while len(I) < MAX_SIZE and sum([math.exp(r(s,j,t)) for j in I]) <= math.exp(r(s,i,t)):
     I.extend([helpers.uniform_sample_i(pis) for k in xrange(10)])
 
 # leaning rate
@@ -92,12 +93,14 @@ delta_teta = lambda s,i,t,dr_teta,k: eta(k) * (dr_teta(s,i,t) - sum([wist(j,s,t)
 
 # learning
 def doit():
-  global S,I,ps,pi,dr_pi,pa,dr_pa,vs,dr_vs,vsk,dr_vsk,ci,dr_ci,ca,dr_ca
+  global S,I,ps,pi,dr_pi,pa,dr_pa,vs,dr_vs,vsk,dr_vsk,ci,dr_ci,ca,dr_ca,rsit
   STEP_CNT = 20
   for k in xrange(1, STEP_CNT + 1):
-    update_I(I, r, s, i, t, pis)
     for s in S:
-      for i,t in ps(s):
+      for track in ps[s]:
+        i = track["tid"]
+        t = track["time"]
+        update_I(I, rsit, s, i, t, pis)
         for var, d in ((pi,dr_pi),
                       (pa,dr_pa),
                       (vs,dr_vs),
