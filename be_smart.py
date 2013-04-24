@@ -19,13 +19,18 @@ ids_to_item, item_to_ids = helpers.pack(ai.keys())
 ids_to_a, a_to_ids = helpers.pack(ai.values())
 ids_to_s ,s_to_ids = helpers.pack(list(S))
 
+ai = inputs.adapt_ai(ai, item_to_ids, a_to_ids)
+
+S = inputs.adapt_S(S, s_to_ids)
+
 # set of songs,time played by station s
-ps = inputs.ps(S) # hash of set (of size 2)
+ps = inputs.ps(S, item_to_ids, ids_to_s) # hash of set (of size 2)
 
 # Number of 
 n_l = 20      # latent factors
 n_i = len(ai)     # items
-n_a = len(set([artist for artist in ai.values()]))      # artists
+n_a = len(set(ai.values()))      # artists
+print n_a
 n_s = len(S)      # playlists
 n_slots = 8  # slots
 w = 30*60    # time window 3O mins
@@ -47,10 +52,10 @@ vs = init.vs(n_s, n_l)
 vsk = init.vsk(n_s,n_slots,n_l) #3D matrix
 
 # bias for item i
-ci = init.ci(max([int(item) for item in ai])+1)
+ci = init.ci(n_i)
 
 # bias for artist a
-ca = init.ca(max(ai.values())+1)
+ca = init.ca(n_a)
 
 # slot time
 slot = helpers.slot
@@ -65,23 +70,28 @@ qi = lambda i: pi[i] + pa[ai[i]]
 bi = lambda i: ci[i] + ca[ai[i]]
 
 # affinity function
-rsit = lambda s,i,t: bi(i) + np.transpose(qi(i)) * (vs[s] + vsk[s, slot[t]] + sum([qi(j) for j in pstw(ps,t)])/math.sqrt(len(pstw(ps,t))))
+rsit = lambda s,i,t: bi(i) + np.transpose(qi(i)) * (vs[s] + vsk[s, slot(t)] + sum([qi(j) for j in pstw(ps,t)])/math.sqrt(len(pstw(ps,t))))
 
 # probability that the item i will be played on station s at time t
-pist = lambda i,s,t: math.exp(r(s,i,t)) / sum([math.exp(r(s,track["tid"],track["time"])) for track in ps[s]]) # TODO: Check the loop 
+pist = lambda i,s,t: np.exp(r(s,i,t)) / sum([np.exp(r(s,track["tid"],track["time"])) for track in ps[s]]) # TODO: Check the loop 
 
 # probability to uniformly draw i in the training set (empirical frequency of i)
 pis = init.pis(ps)
 
 # weights
-wist = lambda i,s,t: math.exp(r(s,i,t))/pis(i) / sum([math.exp(r(s,track["tid"],track["time"]))/pis(track["tid"]) for track in ps[s]]) # TODO: Check the loop 
+wist = lambda i,s,t: np.exp(r(s,i,t))/pis(i) / sum([np.exp(r(s,track["tid"],track["time"]))/pis(track["tid"]) for track in ps[s]]) # TODO: Check the loop 
 
 # set of items uniformly drawn from the training set (with replacement)
 I = () # TODO: compute
 def update_I(I, r, s, i, t, pis):
   MAX_SIZE = 1000
-  while len(I) < MAX_SIZE and sum([math.exp(r(s,j,t)) for j in I]) <= math.exp(r(s,i,t)):
-    I.extend([helpers.uniform_sample_i(pis) for k in xrange(10)])
+  global ai 
+  try:
+    while len(I) < MAX_SIZE and sum([np.exp(r(s,j,t)) for j in I]) <= np.exp(r(s,i,t)):
+      I.extend([helpers.uniform_sample_i(pis) for k in xrange(10)])
+  except:
+    print "Error: %d => %d"%(i, ai[i])
+    raise
 
 # leaning rate
 eta = lambda k: 0.005 / float(k)

@@ -2,6 +2,7 @@
 
 from bisect import bisect_left
 from random import random
+import time
 
 def slot(t):
   hour = time.gmtime(t).tm_hour
@@ -22,7 +23,7 @@ def pstw(ps,t,w = 30*60):
   return pstw
 
 def pack(l):
-  sl = sorted(l)
+  sl = sorted([int(e) for e in set(l)])
   dl = {}
   for i in xrange(len(sl)):
     dl[sl[i]] = i
