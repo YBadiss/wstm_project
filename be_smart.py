@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 
-import helper_parameters as h_params
 import numpy as np
-import init
+import init, inputs, helpers
 
 ################################################
 # Start input variables 
@@ -16,13 +15,13 @@ n_s = 2      # playlists
 n_slots = 8  # slots
 
 # training of stationIds
-S = h_params.load_S() # set of stationIds
+S = inputs.S() # set of stationIds
 
 # set of songs,time played by station s
-ps = h_params.load_ps(S) # hash of set (of size 2)
+ps = inputs.ps(S) # hash of set (of size 2)
 
 # artist that has producted track i
-ai = h_params.load_ai() # simple hash table tid : aid
+ai = inputs.ai() # simple hash table tid : aid
 
 ################################################
 # End input variables 
@@ -47,7 +46,7 @@ ci = init.ci(n_i)
 ca = init.ca(n_a)
 
 # slot time
-slot = {}
+slot = helpers.getSlot
 
 # set of items played on station s, between t-w and t
 pstw = {} # hash table of hash table of sets 

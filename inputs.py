@@ -3,17 +3,13 @@
 import json
 import os
 
-def getSlot(t):
-  hour = time.gmtime(t).tm_hour
-  return int(hour / 3.0)
-
-def load_ai():
+def ai():
 	return loadJSON("./artists/artist_map.json")
 
-def load_S():
+def S():
 	return loadJSON("./radios/radios.json")
 
-def load_ps(S):
+def ps(S):
 	ret_ps = {}
 	directory = "./radios/radio%d/"
 	for s in S:
