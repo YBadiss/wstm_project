@@ -82,7 +82,7 @@ pis = init.pis(ps)
 wist = lambda i,s,t: np.exp(r(s,i,t))/pis(i) / sum([np.exp(r(s,track["tid"],track["time"]))/pis(track["tid"]) for track in ps[s]]) # TODO: Check the loop 
 
 # set of items uniformly drawn from the training set (with replacement)
-I = () # TODO: compute
+I = [] # TODO: compute
 def update_I(I, r, s, i, t, pis):
   MAX_SIZE = 1000
   global ai 
