@@ -13,6 +13,7 @@ n_i = 10     # items
 n_a = 3      # artists
 n_s = 2      # playlists
 n_slots = 8  # slots
+w = 30*60    # time window 3O mins
 
 # training of stationIds
 S = inputs.S() # set of stationIds
@@ -46,10 +47,10 @@ ci = init.ci(n_i)
 ca = init.ca(n_a)
 
 # slot time
-slot = helpers.getSlot
+slot = helpers.slot
 
 # set of items played on station s, between t-w and t
-pstw = {} # hash table of hash table of sets 
+pstw = helpers.pstw(ps,w) # hash table of hash table of sets 
 
 # artist enhanced latent factors of the item
 qi = lambda i: pi[i] + pa[ai[i]]
