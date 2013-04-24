@@ -92,9 +92,10 @@ delta_teta = lambda s,i,t,dr_teta,k: eta(k) * (dr_teta(s,i,t) - sum([wist(j,s,t)
 
 # learning
 def doit():
-  global S,ps,pi,dr_pi,pa,dr_pa,vs,dr_vs,vsk,dr_vsk,ci,dr_ci,ca,dr_ca
+  global S,I,ps,pi,dr_pi,pa,dr_pa,vs,dr_vs,vsk,dr_vsk,ci,dr_ci,ca,dr_ca
   STEP_CNT = 20
   for k in xrange(1, STEP_CNT + 1):
+    update_I(I, r, s, i, t, pis)
     for s in S:
       for i,t in ps(s):
         for var, d in ((pi,dr_pi),
