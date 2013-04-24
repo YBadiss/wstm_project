@@ -70,7 +70,7 @@ qi = lambda i: pi[i] + pa[ai[i]]
 bi = lambda i: ci[i] + ca[ai[i]]
 
 # affinity function
-rsit = lambda s,i,t: bi(i) + np.transpose(qi(i)) * (vs[s] + vsk[s, slot(t)] + sum([qi(j) for j in pstw(ps,t)])/math.sqrt(len(pstw(ps,t))))
+rsit = lambda s,i,t: bi(i) + np.dot(np.transpose(qi(i)),(vs[s] + vsk[s, slot(t)] + sum([qi(j) for j in pstw(ps,t)])/math.sqrt(len(pstw(ps,t)))))
 
 # probability that the item i will be played on station s at time t
 pist = lambda i,s,t: np.exp(r(s,i,t)) / sum([np.exp(r(s,track["tid"],track["time"])) for track in ps[s]]) # TODO: Check the loop 
@@ -90,7 +90,7 @@ def update_I(I, r, s, i, t, pis):
     while len(I) < MAX_SIZE and sum([np.exp(r(s,j,t)) for j in I]) <= np.exp(r(s,i,t)):
       I.extend([helpers.uniform_sample_i(pis) for k in xrange(10)])
   except:
-    print "Error: %d => %d"%(i, ai[i])
+    print "Error: shape(r) => ", np.shape(r(s,i,t))
     raise
 
 # leaning rate
