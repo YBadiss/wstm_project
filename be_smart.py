@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import helper_parameters as h_params
 import numpy as np
 
 ################################################
@@ -32,7 +33,7 @@ ci = np.array((n_i))
 ca = np.array((n_a))
 
 # artist that has producted track i
-ai = {} # simple hash table tid : aid
+ai = h_params.load_ai() # simple hash table tid : aid
 
 # slot time
 slot = {}
@@ -40,11 +41,11 @@ slot = {}
 # set of items played on station s, between t-w and t
 pstw = {} # hash table of hash table of sets 
 
-# set of songs,time played by station s
-ps = {} # hash of set (of size 2)
-
 # training of stationIds
-S = () # set of stationIds
+S = h_params.load_S() # set of stationIds
+
+# set of songs,time played by station s
+ps = h_params.load_ps(S) # hash of set (of size 2)
 
 ################################################
 # End input variables 
@@ -99,7 +100,7 @@ for k in xrange(1, STEP_CNT + 1):
                     (vsk,dr_vsk),
                     (ci,dr_ci),
                     (ca,dr_ca)):
-        var = delta_teta(s,i,t,d,k)
+        var += delta_teta(s,i,t,d,k) # CORRECTION: the parameters are not EQUAL to detla_teta instead we add the delta to the original value
 
 
 
