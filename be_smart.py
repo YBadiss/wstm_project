@@ -62,21 +62,20 @@ bi = lambda i: ci[i] + ci[ai[i]]
 rsit = lambda s,i,t: bi(i) + np.transpose(qi(i)) * (vs[s] + vsk[s, slot[t]] + sum([qi(j) for j in pstw[s][t]])/math.sqrt(len(pstw[s][t])))
 
 # probability that the item i will be played on station s at time t
-pist = lambda i,s,t: math.exp(r(s,i,t)) / sum([math.exp(r(s,j,t)) for j,_t in ps[s]]) # TODO: Check the loop 
+pist = lambda i,s,t: math.exp(r(s,i,t)) / sum([math.exp(r(s,track["id"],track["time"])) for track in ps[s]]) # TODO: Check the loop 
 
 # probability to uniformly draw i in the training set (empirical frequency of i)
 pis = init.pis(ps)
 
 # weights
-#wist = lambda i,s,t: math.exp(r(s,i,t))/pis(i) / sum([math.exp(r(s,j,t))/pis(j) for j,_t in ps[s]]) # TODO: Check the loop 
-wist = 0.0001
+wist = lambda i,s,t: math.exp(r(s,i,t))/pis(i) / sum([math.exp(r(s,track["id"],track["time"]))/pis(track["id"]) for track in ps[s]]) # TODO: Check the loop 
 
 # set of items uniformly drawn from the training set (with replacement)
 I = () # TODO: compute
-def update_I(I, r, s, i, t):
+def update_I(I, r, s, i, t, pis):
   MAX_SIZE = 1000
   while len(I) < MAX_SIZE and sum([math.exp(r(s,j,t)) for j in I]) <= math.exp(r(s,i,y)):
-    I.extend([s[] for k in xrange(10)])
+    I.extend([uniform_sample_i(pis) for k in xrange(10)])
 
 # leaning rate
 eta = lambda k: 0.005 / float(k)

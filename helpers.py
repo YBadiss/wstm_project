@@ -1,10 +1,15 @@
 #!/usr/bin/env python
 
 from bisect import bisect_left
+from random import random
 
 def slot(t):
   hour = time.gmtime(t).tm_hour
   return int(hour / 3.0)
+
+def uniform_sample_i(pis):
+	frequencies = [f for f,_ in pis]
+	return pis[min(bisect_left(frequencies, random()),len(pis)-1)][1]
 
 # set of items played on station s, between t-w and t
 def pstw(ps,w,t):
