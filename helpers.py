@@ -47,5 +47,3 @@ def memodict(f):
       ret = self[key] = f(key)
       return ret
   return memodict().__getitem__
-
-
