@@ -2,7 +2,7 @@
 
 import json
 import os
-import pdb
+import pdb, config
 
 
 def ai():

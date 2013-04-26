@@ -2,7 +2,7 @@
 
 from bisect import bisect_left
 from random import random
-import time
+import config, time
 
 def slot(t):
   hour = time.gmtime(t).tm_hour

@@ -39,3 +39,4 @@ log/
 radios/*
 build/
 cython_memo/
+tmp/

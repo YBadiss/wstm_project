@@ -3,7 +3,7 @@
 import numpy as np
 import init, inputs, helpers
 import math
-import sys
+import sys, config
 
 ################################################
 # Start input variables 
