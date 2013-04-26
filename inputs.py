@@ -22,12 +22,14 @@ def adapt_S(S, s_to_ids):
 def ps(S, item_to_ids, ids_to_s):
   ret_ps = {}
   directory = "./radios/radio%d/"
+  dtype=[('tid', np.int64), ('time', np.int64)]
+
   for s in S:
-    ret_ps[s] = []
+    ret_ps[s] = np.array([], dtype=dtype)
     for filename in os.listdir(directory%(ids_to_s[s])):
       f_content = loadJSON(directory%(ids_to_s[s]) + filename) if filename.endswith(".json") else None
       if f_content:
-        ret_ps[s].extend([{"tid": item_to_ids[track["tid"]], "time": track["time"]} for track in f_content])
+        ret_ps[s] = np.concatenate([ret_ps[s], np.array([(item_to_ids[track["tid"]], track["time"]) for track in f_content], dtype=dtype)])
   return ret_ps
 
 def loadJSON(filename):
@@ -37,14 +39,14 @@ def loadJSON(filename):
   return None
 
 
-def ps3(S):
-  ret_ps = {}
-  directory = "./radios/radio%d/"
-  for s in S:
-    ret_ps[s] = []
-    for filename in os.listdir(directory%(s)):
-      f_content = loadJSON(directory%(s) + filename) if filename.endswith(".json") else None
-      if f_content:
-        ret_ps[s].extend([{"tid": track["tid"], "time": track["time"]} for track in f_content])
-  return ret_ps
+# def ps3(S):
+#   ret_ps = {}
+#   directory = "./radios/radio%d/"
+#   for s in S:
+#     ret_ps[s] = []
+#     for filename in os.listdir(directory%(s)):
+#       f_content = loadJSON(directory%(s) + filename) if filename.endswith(".json") else None
+#       if f_content:
+#         ret_ps[s].extend([{"tid": track["tid"], "time": track["time"]} for track in f_content])
+#   return ret_ps
 
