@@ -20,7 +20,7 @@ ids_to_item, item_to_ids = helpers.pack(ai.keys())
 ids_to_a, a_to_ids = helpers.pack(ai.values())
 ids_to_s ,s_to_ids = helpers.pack(list(S))
 
-ai = inputs.adapt_ai(ai, item_to_ids, a_to_ids)
+ai = inputs.adapt_ai(ai, a_to_ids, ids_to_item)
 
 S = inputs.adapt_S(S, s_to_ids)
 
@@ -30,7 +30,7 @@ ps = inputs.ps(S, item_to_ids, ids_to_s) # hash of set (of size 2)
 # Number of 
 n_l = 20      # latent factors
 n_i = len(ai)     # items
-n_a = len(set(ai.values()))      # artists
+n_a = len(set(ai))      # artists
 n_s = len(S)      # playlists
 n_slots = 8  # slots
 w = 30*60    # time window 3O mins

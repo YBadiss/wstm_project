@@ -2,21 +2,22 @@
 
 import json
 import os
-import pdb
-
+import numpy as np
 
 def ai():
   return loadJSON("./artists/artist_map.json")
 
-def adapt_ai(ai, item_to_ids, a_to_ids):
-  return {item_to_ids[int(key)]: a_to_ids[ai[key]] for key in ai}
+# [item_to_ids[int(key)]: a_to_ids[ai[key]] for key in ai}
+def adapt_ai(ai, a_to_ids, ids_to_item):
+  return np.array([a_to_ids[ai[str(item)]] for item in ids_to_item])
+  #return np.array([a_to_ids[ai[key]] for key in xrange(len(ai))])
 
 def S(test = True):
   TEST_RADIOS = [10, 16, 203, 264, 287]
   return TEST_RADIOS if test else loadJSON("./radios/radios.json")
 
 def adapt_S(S, s_to_ids):
-  return tuple(s_to_ids[s] for s in S)
+  return np.array([s_to_ids[s] for s in S])
 
 def ps(S, item_to_ids, ids_to_s):
   ret_ps = {}
