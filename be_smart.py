@@ -70,7 +70,7 @@ qi = lambda i: pi[i] + pa[ai[i]]
 bi = lambda i: ci[i] + ca[ai[i]]
 
 # affinity function
-rsit = lambda ((s,i,t)): bi(i) + np.dot(np.transpose(qi(i)),(vs[s] + vsk[s, slot(t)] + sum([qi(j) for j in pstw(ps,t)])/math.sqrt(len(pstw(ps,t)))))
+rsit = lambda ((s,i,t)): bi(i) + np.dot(np.transpose(qi(i)),(vs[s] + vsk[s, slot(t)] + sum(pi[pstw(ps,t)]+pa[ai[pstw(ps,t)]])/math.sqrt(len(pstw(ps,t)))))
 rsit = helpers.memodict(rsit)
 
 # probability that the item i will be played on station s at time t
@@ -136,7 +136,7 @@ def doit():
 def errCall(err, flag):
   print "Error:"
   print I
-  raise
+  raise err
 
 np.seterr(all='call')
 np.seterrcall(errCall)
