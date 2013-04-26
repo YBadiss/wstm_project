@@ -84,14 +84,15 @@ wist = lambda ((i,s,t)): np.exp(rsit((s,i,t)))/helpers.getProba(pis,i) / sum([np
 wist = helpers.memodict(wist)
 
 # set of items uniformly drawn from the training set (with replacement)
-I = [] # TODO: compute
+I = [] #np.array([]) # TODO: compute
 def update_I(I, rsit, s, i, t, pis):
   MAX_SIZE = 1000
   sum_j = sum([np.exp(rsit((s,j,t))) for j in I])
   r_i = np.exp(rsit((s,i,t)))
   while len(I) < MAX_SIZE and  sum_j <= r_i:
-    new_j = [helpers.uniform_sample_i(pis) for k in xrange(10)]
+    new_j = [helpers.uniform_sample_i(pis) for k in xrange(10)] #np.array([helpers.uniform_sample_i(pis) for k in xrange(10)])
     sum_j += sum([np.exp(rsit((s,j,t))) for j in new_j])
+    #I = np.concatenate([I,new_j])
     I.extend(new_j)
 
 # leaning rate
@@ -111,8 +112,10 @@ delta_teta = lambda s,i,t,dr_teta,k: eta(k) * (dr_teta(s,i,t) - sum([wist((j,s,t
 def doit():
   global S,I,ps,pi,dr_pi,pa,dr_pa,vs,dr_vs,vsk,dr_vsk,ci,dr_ci,ca,dr_ca,rsit
   STEP_CNT = 20
+  cap = np.vectorize(lambda x: max(min(x,1),-1))
+
   for k in xrange(1, STEP_CNT + 1):
-    print "Step %d"%(k)
+    print "Step %d"%(k) 
     for s in S:
       print "\tStation %d"%(s)
       sys.stdout.flush()
@@ -126,8 +129,17 @@ def doit():
                       (vsk,dr_vsk),
                       (ci,dr_ci),
                       (ca,dr_ca)):
-          var[i] += delta_teta(s,i,t,d,k) # CORRECTION: the parameters are not EQUAL to detla_teta instead we add the delta to the original value
+          var += delta_teta(s,i,t,d,k) # CORRECTION: the parameters are not EQUAL to detla_teta instead we add the delta to the original value
+          var = cap(var)
       return
+
+def errCall(err, flag):
+  print "Error:"
+  print I
+  raise
+
+np.seterr(all='call')
+np.seterrcall(errCall)
 
 if __name__ == "__main__":
   doit()

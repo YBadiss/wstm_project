@@ -6,7 +6,7 @@ import os.path
 DEBUG_MODE = True
 
 def retrieve_store(filename, value):
-    if os.path.isfile(filename):
+    if os.path.exists(filename):
       value = np.load(filename)
     else:
       np.save(filename,value)
