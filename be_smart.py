@@ -4,6 +4,7 @@ import numpy as np
 import init, inputs, helpers
 import math
 import sys, config
+import time
 
 ################################################
 # Start input variables 
@@ -20,7 +21,7 @@ ids_to_item, item_to_ids = helpers.pack(ai.keys())
 ids_to_a, a_to_ids = helpers.pack(ai.values())
 ids_to_s ,s_to_ids = helpers.pack(list(S))
 
-ai = inputs.adapt_ai(ai, item_to_ids, a_to_ids)
+ai = inputs.adapt_ai(ai, a_to_ids, ids_to_item)
 
 S = inputs.adapt_S(S, s_to_ids)
 
@@ -30,7 +31,7 @@ ps = inputs.ps(S, item_to_ids, ids_to_s) # hash of set (of size 2)
 # Number of 
 n_l = 20      # latent factors
 n_i = len(ai)     # items
-n_a = len(set(ai.values()))      # artists
+n_a = len(set(ai))      # artists
 n_s = len(S)      # playlists
 n_slots = 8  # slots
 w = 30*60    # time window 3O mins
@@ -42,7 +43,7 @@ w = 30*60    # time window 3O mins
 # latent factor vector for items
 pi = init.pi(n_i, n_l)
 
-# latent factor vector for artists 
+# latent factor vector for, ps artists 
 pa = init.pa(n_a, n_l)
 
 # latent factor vector for station s
@@ -61,7 +62,8 @@ ca = init.ca(n_a)
 slot = helpers.slot
 
 # set of items played on station s, between t-w and t
-pstw = helpers.pstw # hash table of hash table of sets 
+pstw = helpers.pstw # hash table of hash table of sets
+pstw = helpers.memodict2(pstw, ps)
 
 # artist enhanced latent factors of the item
 qi = lambda i: pi[i] + pa[ai[i]]
@@ -70,11 +72,12 @@ qi = lambda i: pi[i] + pa[ai[i]]
 bi = lambda i: ci[i] + ca[ai[i]]
 
 # affinity function
-rsit = lambda ((s,i,t)): bi(i) + np.dot(np.transpose(qi(i)),(vs[s] + vsk[s, slot(t)] + sum(pi[pstw(ps,t)]+pa[ai[pstw(ps,t)]])/math.sqrt(len(pstw(ps,t)))))
+#rsit = lambda ((s,i,t)): bi(i) + np.dot(np.transpose(qi(i)),(vs[s] + vsk[s, slot(t)] + sum([qi(j) for j in pstw((s,t,w))])/math.sqrt(len(pstw((s,t,w))))))
+rsit = lambda ((s,i,t)): bi(i) + np.dot(np.transpose(qi(i)),(vs[s] + vsk[s, slot(t)] + (pi.take(pstw((s,t,w)), axis=0) + pa[ai.take(pstw((s,t,w)))]).sum()/math.sqrt(len(pstw((s,t,w))))))
 rsit = helpers.memodict(rsit)
 
 # probability that the item i will be played on station s at time t
-pist = lambda i,s,t: np.exp(rsit((s,i,t))) / sum([np.exp(rsit((s,track["tid"],track["time"]))) for track in ps[s]]) # TODO: Check the loop 
+# pist = lambda i,s,t: np.exp(rsit((s,i,t))) / sum([np.exp(rsit((s,track["tid"],track["time"]))) for j in ps[s]]) # TODO: Check the loop 
 
 # probability to uniformly draw i in the training set (empirical frequency of i)
 pis = init.pis(ps)
@@ -84,23 +87,24 @@ wist = lambda ((i,s,t)): np.exp(rsit((s,i,t)))/helpers.getProba(pis,i) / sum([np
 wist = helpers.memodict(wist)
 
 # set of items uniformly drawn from the training set (with replacement)
-I = [] #np.array([]) # TODO: compute
+I = np.array([]) #[] # # TODO: compute
 def update_I(I, rsit, s, i, t, pis):
   MAX_SIZE = 1000
-  sum_j = sum([np.exp(rsit((s,j,t))) for j in I])
-  r_i = np.exp(rsit((s,i,t)))
-  while len(I) < MAX_SIZE and  sum_j <= r_i:
-    new_j = [helpers.uniform_sample_i(pis) for k in xrange(10)] #np.array([helpers.uniform_sample_i(pis) for k in xrange(10)])
-    sum_j += sum([np.exp(rsit((s,j,t))) for j in new_j])
-    #I = np.concatenate([I,new_j])
-    I.extend(new_j)
+  if len(I) < MAX_SIZE:
+    sum_j = sum([np.exp(rsit((s,j,t))) for j in I])
+    r_i = np.exp(rsit((s,i,t)))
+    while len(I) < MAX_SIZE and  sum_j <= r_i:
+      new_j = np.array([helpers.uniform_sample_i(pis) for k in xrange(10)])
+      sum_j += sum([np.exp(rsit((s,j,t))) for j in new_j])
+      I = np.concatenate([I,new_j])
+      #I.extend(new_j)
 
 # leaning rate
 eta = lambda k: 0.005 / float(k)
 
 # differenciation
-dr_pi = lambda s,i,t: np.transpose((vs[s] + vsk[s, slot(t)] + sum([qi(j) for j in pstw(ps,t)])/math.sqrt(len(pstw(ps,t))))) + np.transpose(qi(i))*(1/math.sqrt(len(pstw(ps,t))) if i in pstw(ps,t) else 0)
-dr_pa = lambda s,i,t: np.transpose((vs[s] + vsk[s, slot(t)] + sum([qi(j) for j in pstw(ps,t)])/math.sqrt(len(pstw(ps,t))))) + np.transpose(qi(i))*(1/math.sqrt(len(pstw(ps,t))) if i in pstw(ps,t) else 0)
+dr_pi = lambda s,i,t: np.transpose((vs[s] + vsk[s, slot(t)] + sum([qi(j) for j in pstw((s,t,w))])/math.sqrt(len(pstw((s,t,w)))))) + np.transpose(qi(i))*(1/math.sqrt(len(pstw((s,t,w)))) if i in pstw((s,t,w)) else 0)
+dr_pa = lambda s,i,t: np.transpose((vs[s] + vsk[s, slot(t)] + sum([qi(j) for j in pstw((s,t,w))])/math.sqrt(len(pstw((s,t,w)))))) + np.transpose(qi(i))*(1/math.sqrt(len(pstw((s,t,w)))) if i in pstw((s,t,w)) else 0)
 dr_vs = lambda s,i,t: np.transpose(qi(i))
 dr_vsk = lambda s,i,t: np.transpose(qi(i))
 dr_ci = lambda s,i,t: 1
@@ -117,11 +121,13 @@ def doit():
   for k in xrange(1, STEP_CNT + 1):
     print "Step %d"%(k) 
     for s in S:
+      st = time.time()
       print "\tStation %d"%(s)
       sys.stdout.flush()
-      for track in ps[s]:
-        i = track["tid"]
-        t = track["time"]
+      # for track in ps[s]:
+      #   i = track["tid"]
+      #   t = track["time"]
+      for i,t in zip(ps[s]["tids"],ps[s]["times"]):
         update_I(I, rsit, s, i, t, pis)
         for var, d in ((pi,dr_pi),
                       (pa,dr_pa),
@@ -131,15 +137,8 @@ def doit():
                       (ca,dr_ca)):
           var += delta_teta(s,i,t,d,k) # CORRECTION: the parameters are not EQUAL to detla_teta instead we add the delta to the original value
           var = cap(var)
-      return
-
-def errCall(err, flag):
-  print "Error:"
-  print I
-  raise err
-
-np.seterr(all='call')
-np.seterrcall(errCall)
+      print time.time()-st
+      #return  
 
 if __name__ == "__main__":
   doit()

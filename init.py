@@ -39,12 +39,17 @@ def ca(n_a):
   return random(n_a)
 
 def pis(ps):
-  c = Counter(reduce(list.__add__,[[i["tid"] for i in l] for l in ps.values()],[]))
+  c = Counter()
+  for l in ps.values():
+    c += Counter(l['tids'])
+
   cnt = 0
-  out = []
-  l = sum(c.values())
+  freqs = []
+  #tids = []
+  l = float(sum(c.values()))
   for i,n in sorted(c.items()):
     cnt += n
-    out.append((cnt/float(l),i))
-  return out
+    freqs.append(cnt/l)
+    #tids.append(i)
+  return np.array(freqs, dtype=np.float64)
 
