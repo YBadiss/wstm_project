@@ -3,6 +3,7 @@
 import numpy as np
 import init, inputs, helpers
 import math
+import sys
 
 ################################################
 # Start input variables 
@@ -69,29 +70,29 @@ qi = lambda i: pi[i] + pa[ai[i]]
 bi = lambda i: ci[i] + ca[ai[i]]
 
 # affinity function
-rsit = lambda s,i,t: bi(i) + np.dot(np.transpose(qi(i)),(vs[s] + vsk[s, slot(t)] + sum([qi(j) for j in pstw(ps,t)])/math.sqrt(len(pstw(ps,t)))))
+rsit = lambda ((s,i,t)): bi(i) + np.dot(np.transpose(qi(i)),(vs[s] + vsk[s, slot(t)] + sum([qi(j) for j in pstw(ps,t)])/math.sqrt(len(pstw(ps,t)))))
+rsit = helpers.memodict(rsit)
 
 # probability that the item i will be played on station s at time t
-pist = lambda i,s,t: np.exp(rsit(s,i,t)) / sum([np.exp(rsit(s,track["tid"],track["time"])) for track in ps[s]]) # TODO: Check the loop 
+pist = lambda i,s,t: np.exp(rsit((s,i,t))) / sum([np.exp(rsit((s,track["tid"],track["time"]))) for track in ps[s]]) # TODO: Check the loop 
 
 # probability to uniformly draw i in the training set (empirical frequency of i)
 pis = init.pis(ps)
 
 # weights
-wist = lambda i,s,t: np.exp(rsit(s,i,t))/pis[i] / sum([np.exp(rsit(s,track["tid"],track["time"]))/pis[track["tid"]] for track in ps[s]]) # TODO: Check the loop 
+wist = lambda ((i,s,t)): np.exp(rsit((s,i,t)))/helpers.getProba(pis,i) / sum([np.exp(rsit((s,track["tid"],track["time"])))/helpers.getProba(pis,track["tid"]) for track in ps[s]]) # TODO: Check the loop 
+wist = helpers.memodict(wist)
 
 # set of items uniformly drawn from the training set (with replacement)
 I = [] # TODO: compute
 def update_I(I, rsit, s, i, t, pis):
   MAX_SIZE = 1000
-  global ai 
-  try:
-    while len(I) < MAX_SIZE and sum([np.exp(rsit(s,j,t)) for j in I]) <= np.exp(rsit(s,i,t)):
-      I.extend([helpers.uniform_sample_i(pis) for k in xrange(10)])
-      I = list(set(I))
-  except:
-    print "Error: shape(rsit) => ", np.shape(rsit(s,i,t))
-    raise
+  sum_j = sum([np.exp(rsit((s,j,t))) for j in I])
+  r_i = np.exp(rsit((s,i,t)))
+  while len(I) < MAX_SIZE and  sum_j <= r_i:
+    new_j = [helpers.uniform_sample_i(pis) for k in xrange(10)]
+    sum_j += sum([np.exp(rsit((s,j,t))) for j in new_j])
+    I.extend(new_j)
 
 # leaning rate
 eta = lambda k: 0.005 / float(k)
@@ -104,14 +105,17 @@ dr_vsk = lambda s,i,t: np.transpose(qi(i))
 dr_ci = lambda s,i,t: 1
 dr_ca = lambda s,i,t: 1
 
-delta_teta = lambda s,i,t,dr_teta,k: eta(k) * (dr_teta(s,i,t) - sum([wist(j,s,t) for j in I]) * dr_teta(s,i,t))
+delta_teta = lambda s,i,t,dr_teta,k: eta(k) * (dr_teta(s,i,t) - sum([wist((j,s,t)) for j in I]) * dr_teta(s,i,t))
 
 # learning
 def doit():
   global S,I,ps,pi,dr_pi,pa,dr_pa,vs,dr_vs,vsk,dr_vsk,ci,dr_ci,ca,dr_ca,rsit
   STEP_CNT = 20
   for k in xrange(1, STEP_CNT + 1):
+    print "Step %d"%(k)
     for s in S:
+      print "\tStation %d"%(s)
+      sys.stdout.flush()
       for track in ps[s]:
         i = track["tid"]
         t = track["time"]
@@ -123,8 +127,7 @@ def doit():
                       (ci,dr_ci),
                       (ca,dr_ca)):
           var += delta_teta(s,i,t,d,k) # CORRECTION: the parameters are not EQUAL to detla_teta instead we add the delta to the original value
-
+      return
 
 if __name__ == "__main__":
-    doit()
-
+  doit()

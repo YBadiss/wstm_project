@@ -32,6 +32,6 @@ def pis(ps):
   l = sum(c.values())
   for i,n in sorted(c.items()):
     cnt += n
-    out.append((n/float(l),i))
+    out.append((cnt/float(l),i))
   return out
 
