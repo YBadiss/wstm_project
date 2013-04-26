@@ -98,8 +98,8 @@ def update_I(I, rsit, s, i, t, pis):
 eta = lambda k: 0.005 / float(k)
 
 # differenciation
-dr_pi = lambda s,i,t: (vs[s] + vsk[s, slot(t)] + sum([qi(j) for j in pstw(ps,t)])/math.sqrt(len(pstw(ps,t)))) + np.transpose(qi(i))*(1/math.sqrt(len(pstw(ps,t))) if i in pstw(ps,t) else 0)
-dr_pa = lambda s,i,t: (vs[s] + vsk[s, slot(t)] + sum([qi(j) for j in pstw(ps,t)])/math.sqrt(len(pstw(ps,t)))) + np.transpose(qi(i))*(1/math.sqrt(len(pstw(ps,t))) if i in pstw(ps,t) else 0)
+dr_pi = lambda s,i,t: np.transpose((vs[s] + vsk[s, slot(t)] + sum([qi(j) for j in pstw(ps,t)])/math.sqrt(len(pstw(ps,t))))) + np.transpose(qi(i))*(1/math.sqrt(len(pstw(ps,t))) if i in pstw(ps,t) else 0)
+dr_pa = lambda s,i,t: np.transpose((vs[s] + vsk[s, slot(t)] + sum([qi(j) for j in pstw(ps,t)])/math.sqrt(len(pstw(ps,t))))) + np.transpose(qi(i))*(1/math.sqrt(len(pstw(ps,t))) if i in pstw(ps,t) else 0)
 dr_vs = lambda s,i,t: np.transpose(qi(i))
 dr_vsk = lambda s,i,t: np.transpose(qi(i))
 dr_ci = lambda s,i,t: 1
@@ -126,7 +126,7 @@ def doit():
                       (vsk,dr_vsk),
                       (ci,dr_ci),
                       (ca,dr_ca)):
-          var += delta_teta(s,i,t,d,k) # CORRECTION: the parameters are not EQUAL to detla_teta instead we add the delta to the original value
+          var[i] += delta_teta(s,i,t,d,k) # CORRECTION: the parameters are not EQUAL to detla_teta instead we add the delta to the original value
       return
 
 if __name__ == "__main__":
