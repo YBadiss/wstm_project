@@ -114,7 +114,7 @@ dr_vsk = lambda s,i,t: np.transpose(pi[i] + pa[ai[i]])
 dr_ci = lambda s,i,t: 1
 dr_ca = lambda s,i,t: 1
 
-delta_teta = lambda s,i,t,dr_teta,k: eta(k) * (dr_teta(s,i,t) - sum([wist((j,s,t)) for j in I]) * dr_teta(s,i,t))
+delta_teta = lambda s,i,t,dr_teta,k: eta(k) * (dr_teta(s,i,t) - sum([wist((j,s,t))*dr_teta(s,j,t) for j in I]))
 
 # learning
 def doit():
