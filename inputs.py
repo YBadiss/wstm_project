@@ -45,5 +45,3 @@ def loadJSON(filename):
     with open(filename, "r") as fd:
       return json.loads(fd.read())
   return None
-
-
