@@ -16,7 +16,7 @@ def get_existing_tids(S):
 
 def clean_ai(path="./artists/"):
 	ai = inputs.ai()
-	S = inputs.S()
+	S = inputs.S(path)
 	tids = get_existing_tids(S)
 	new_ai = {}
 	ais_to_get = []

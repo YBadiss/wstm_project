@@ -1,10 +1,10 @@
 from be_smart import *
+import inputs
 from heapq import *
 import json
 import shutil
 import os
 import pdb
-import cleanArtists
 
 NB_TRACKS = 10
 NB_S = 2
@@ -14,6 +14,21 @@ def loadJSON(filename):
     with open(filename, "r") as fd:
       return json.loads(fd.read())
   return None
+
+def clean_ai(path="./artists/"):
+  ai = inputs.ai()
+  S = inputs.S()
+  tids = get_existing_tids(S)
+  new_ai = {}
+  ais_to_get = []
+
+  for tid in tids:
+    if tid in ai:
+      new_ai[tid] = ai[tid]
+    else:
+      ais_to_get.append(tid)
+  writeJSON(path+"artist_map.json", new_ai)
+  writeJSON(path+"to_get.json", ais_to_get)
 
 r = Recommender(20, 8, 30*60)
 #print r.pis['real']
@@ -54,3 +69,5 @@ for r in radios:
   os.makedirs(directory+'radio%d/'%(r))
   with open(directory + 'radio%d/tracks.json'%(r),'w') as fd:
     fd.write(json.dumps([track for track in tracks if track['tid'] in radios[r]]))
+
+  clean_ai('./data_test/artists/')
