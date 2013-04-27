@@ -5,141 +5,134 @@ import init, inputs, helpers
 import math
 import sys, config
 import time
+import pdb
 
-################################################
-# Start input variables 
-################################################
+class Recommender:
+  def __init__(self, n_l, n_slots, w):
+    self.ai = inputs.ai() # simple hash table tid : aid
+    # training of stationIds
+    self.S = inputs.S() # set of stationIds
+    # Id mapping dicts
+    self.ids_to_item, self.item_to_ids = helpers.pack(self.ai.keys())
+    self.ids_to_a, self.a_to_ids = helpers.pack(self.ai.values())
+    self.ids_to_s, self.s_to_ids = helpers.pack(list(self.S))
 
-# artist that has producted track i
-ai = inputs.ai() # simple hash table tid : aid
+    self.ai = inputs.adapt_ai(self.ai, self.a_to_ids, self.ids_to_item)
+    self.S = inputs.adapt_S(self.S, self.s_to_ids)
 
-# training of stationIds
-S = inputs.S() # set of stationIds
+    # set of songs,time played by station s
+    self.ps = inputs.ps(self.S, self.item_to_ids, self.ids_to_s) # hash of set (of size 2)
 
-# Id mapping dicts
-ids_to_item, item_to_ids = helpers.pack(ai.keys())
-ids_to_a, a_to_ids = helpers.pack(ai.values())
-ids_to_s ,s_to_ids = helpers.pack(list(S))
+    self.pis = init.pis(self.ps)
 
-ai = inputs.adapt_ai(ai, a_to_ids, ids_to_item)
+    self.I = np.array([])
 
-S = inputs.adapt_S(S, s_to_ids)
+    # Number of 
+    self.n_l = n_l      # latent factors
+    self.n_i = len(self.ai)     # items
+    self.n_a = len(set(self.ai))      # artists
+    self.n_s = len(self.S)      # playlists
+    self.n_slots = n_slots  # slots
+    self.w = w    # time window 3O mins
 
-# set of songs,time played by station s
-ps = inputs.ps(S, item_to_ids, ids_to_s) # hash of set (of size 2)
+    # latent factor vector for items
+    self.pi = init.pi(self.n_i, self.n_l)
 
-# Number of 
-n_l = 20      # latent factors
-n_i = len(ai)     # items
-n_a = len(set(ai))      # artists
-n_s = len(S)      # playlists
-n_slots = 8  # slots
-w = 30*60    # time window 3O mins
+    # latent factor vector for, ps artists 
+    self.pa = init.pa(self.n_a, self.n_l)
 
-################################################
-# End input variables 
-################################################
+    # latent factor vector for station s
+    self.vs = init.vs(self.n_s, self.n_l)
 
-# latent factor vector for items
-pi = init.pi(n_i, n_l)
+    # latent factor vector for station s at time slot k
+    self.vsk = init.vsk(self.n_s, self.n_slots, self.n_l) #3D matrix
 
-# latent factor vector for, ps artists 
-pa = init.pa(n_a, n_l)
+    # bias for item i
+    self.ci = init.ci(self.n_i)
 
-# latent factor vector for station s
-vs = init.vs(n_s, n_l)
+    # bias for artist a
+    self.ca = init.ca(self.n_a)
 
-# latent factor vector for station s at time slot k
-vsk = init.vsk(n_s,n_slots,n_l) #3D matrix
+    # slot time
+    self.slot = helpers.slot
 
-# bias for item i
-ci = init.ci(n_i)
+    # set of items played on station s, between t-w and t
+    self.pstw = helpers.pstw # hash table of hash table of sets
+    self.pstw = helpers.memodict2(self.pstw, self.ps)
 
-# bias for artist a
-ca = init.ca(n_a)
 
-# slot time
-slot = helpers.slot
+  def rsit(self, (s, i, t)):
+    b = self.ci[i] + self.ca[self.ai[i]]
+    term1 = self.pi[i] + self.pa[self.ai[i]]
+    term2 = self.vs[s] + self.vsk[s, self.slot(t)] + (self.pi.take(self.pstw((s,t,self.w)), axis=0) + self.pa[self.ai.take(self.pstw((s,t,self.w)))]).sum()/np.sqrt(self.pstw((s,t,self.w)).size)
+    return np.dot(term1 , term2)
 
-# set of items played on station s, between t-w and t
-pstw = helpers.pstw # hash table of hash table of sets
-pstw = helpers.memodict2(pstw, ps)
+  def wist(self, (I, i,s,t)):
+    num = np.exp(self.rsit((s,i,t))) / helpers.getProba(self.pis,i)
+    denom = sum([np.exp(self.rsit((s,tid,t))) / helpers.getProba(self.pis,tid) for tid in self.I])
+    return num/denom
 
-# artist enhanced latent factors of the item
-qi = lambda i: pi[i] + pa[ai[i]]
+  def eta(self, k):
+    return 0.005 / float(k)
 
-# artist enhanced bias: 
-bi = lambda i: ci[i] + ca[ai[i]]
+  def dr_pi(self, s, i, t):
+    term1 = self.vs[s] + self.vsk[s, self.slot(t)] + sum([self.pi[j] + self.pa[self.ai[j]] for j in self.pstw((s,t,self.w))]) / np.sqrt(self.pstw((s,t,self.w)).size)
+    if i in self.pstw((s,t,self.w)):
+      term2 = self.pi[i] + self.pa[self.ai[i]] / np.sqrt(self.pstw((s,t,self.w)).size)
+      return term1 + term2
+    else:
+      return term1
 
-# affinity function
-#rsit = lambda ((s,i,t)): bi(i) + np.dot(np.transpose(qi(i)),(vs[s] + vsk[s, slot(t)] + sum([qi(j) for j in pstw((s,t,w))])/math.sqrt(len(pstw((s,t,w))))))
-#rsit = lambda ((s,i,t)): ci[i] + ca[ai[i]] + np.dot(np.transpose(pi[i] + pa[ai[i]]),(vs[s] + vsk[s, slot(t)] + (pi.take(pstw((s,t,w)), axis=0) + pa[ai.take(pstw((s,t,w)))]).sum()/np.sqrt(pstw((s,t,w)).size)))
-rsit = lambda ((s,i,t)): ci[i] + ca[ai[i]] + np.dot(np.transpose(pi[i] + pa[ai[i]]),(vs[s] + vsk[s, slot(t)] + (pi.take(pstw((s,t,w)), axis=0) + pa[ai.take(pstw((s,t,w)))]).sum()/np.sqrt(pstw((s,t,w)).size)))
-rsit = helpers.memodict(rsit)
+  def dr_pa(self, s, i, t):
+    return self.dr_pa(s,i,t)
 
-# probability that the item i will be played on station s at time t
-# pist = lambda i,s,t: np.exp(rsit((s,i,t))) / sum([np.exp(rsit((s,track["tid"],track["time"]))) for j in ps[s]]) # TODO: Check the loop 
+  def dr_vs(self, s, i, t):
+    return self.pi[i] + self.pa[self.ai[i]]
 
-# probability to uniformly draw i in the training set (empirical frequency of i)
-pis = init.pis(ps)
+  def dr_vsk(self, s, i, t):
+    return self.dr_vs(s,i,t)
 
-# weights
-wist = lambda ((i,s,t)): np.exp(rsit((s,i,t)))/helpers.getProba(pis,i) / sum([np.exp(rsit((s,track["tid"],track["time"])))/helpers.getProba(pis,track["tid"]) for track in ps[s]]) # TODO: Check the loop 
-wist = helpers.memodict(wist)
+  def dr_ci(self, s, i, t):
+    return 1
 
-# set of items uniformly drawn from the training set (with replacement)
-I = np.array([]) #[] # # TODO: compute
-def update_I(I, rsit, s, i, t, pis):
-  MAX_SIZE = 1000
-  if len(I) < MAX_SIZE:
-    sum_j = sum([np.exp(rsit((s,j,t))) for j in I])
-    r_i = np.exp(rsit((s,i,t)))
-    while len(I) < MAX_SIZE and  sum_j <= r_i:
-      new_j = np.array([helpers.uniform_sample_i(pis) for k in xrange(10)])
-      sum_j += sum([np.exp(rsit((s,j,t))) for j in new_j])
-      I = np.concatenate([I,new_j])
-      #I.extend(new_j)
+  def dr_ca(self, s, i, t):
+    return 1
 
-# leaning rate
-eta = lambda k: 0.005 / float(k)
+  def delta_teta(self, s, i, t, dr_teta, k):
+    return self.eta(k) * (dr_teta(s,i,t) - sum([self.wist((self.I, j,s,t)) * dr_teta(s,j,t) for j in self.I]))
 
-# differenciation
-#dr_pi = lambda s,i,t: np.transpose((vs[s] + vsk[s, slot(t)] + (pi.take(pstw((s,t,w)), axis=0) + pa[ai.take(pstw((s,t,w)))]).sum()/np.sqrt(pstw((s,t,w)).size))) + (np.transpose(pi[i] + pa[ai[i]])*1/np.sqrt(pstw((s,t,w)).size) if i in pstw((s,t,w)) else 0)
-#dr_pa = lambda s,i,t: np.transpose((vs[s] + vsk[s, slot(t)] + (pi.take(pstw((s,t,w)), axis=0) + pa[ai.take(pstw((s,t,w)))]).sum()/np.sqrt(pstw((s,t,w)).size))) + (np.transpose(pi[i] + pa[ai[i]])*1/np.sqrt(pstw((s,t,w)).size) if i in pstw((s,t,w)) else 0)
+  def update_I(self, s, i, t):
+    MAX_SIZE = 1000
+    if self.I.size < MAX_SIZE:
+      sum_j = sum([np.exp(self.rsit((s,j,t))) for j in self.I])
+      r_i = np.exp(self.rsit((s,i,t)))
+      while (self.I.size < MAX_SIZE) and (sum_j <= r_i):
+        new_j = np.array([helpers.uniform_sample_i(self.pis) for k in xrange(10)])
+        sum_j += sum([np.exp(self.rsit((s,j,t))) for j in new_j])
+        self.I = np.concatenate([self.I,new_j])
 
-dr_pi = lambda s,i,t: np.transpose((vs[s] + vsk[s, slot(t)] + sum([pi[j] + pa[ai[j]] for j in pstw((s,t,w))])/np.sqrt(pstw((s,t,w)).size))) + np.transpose(qi(i))*(1/np.sqrt(pstw((s,t,w)).size) if i in pstw((s,t,w)) else 0)
-dr_pa = lambda s,i,t: np.transpose((vs[s] + vsk[s, slot(t)] + sum([pi[j] + pa[ai[j]] for j in pstw((s,t,w))])/np.sqrt(pstw((s,t,w)).size))) + np.transpose(qi(i))*(1/np.sqrt(pstw((s,t,w)).size) if i in pstw((s,t,w)) else 0)
-dr_vs = lambda s,i,t: np.transpose(pi[i] + pa[ai[i]])
-dr_vsk = lambda s,i,t: np.transpose(pi[i] + pa[ai[i]])
-dr_ci = lambda s,i,t: 1
-dr_ca = lambda s,i,t: 1
+  def update(self, s, i, t, k):
+    self.update_I(s,i,t)
+    delta = [(var, self.delta_teta(s,i,t,d,k)) for var,d in (((self.pi,self.pa),self.dr_pi) , ((self.vs,self.vsk),self.dr_vs) , ((self.ci,self.ca),self.dr_ci))]
+    [(np.clip(var1 + d,-1,1,var1), np.clip(var2 + d,-1,1,var2)) for ((var1,var2),d) in delta]
 
-delta_teta = lambda s,i,t,dr_teta,k: eta(k) * (dr_teta(s,i,t) - sum([wist((j,s,t))*dr_teta(s,j,t) for j in I]))
+
 
 # learning
-def doit():
-  global S,I,ps,pi,dr_pi,pa,dr_pa,vs,dr_vs,vsk,dr_vsk,ci,dr_ci,ca,dr_ca,rsit
-  STEP_CNT = 20
-  for k in xrange(1, STEP_CNT + 1):
+def doit(reco, step_cnt):
+  for k in xrange(1, step_cnt + 1):
     print "Step %d"%(k) 
-    for s in S:
+    for s in reco.S:
       st = time.time()
       print "\tStation %d"%(s)
       sys.stdout.flush()
-      # for track in ps[s]:
-      #   i = track["tid"]
-      #   t = track["time"]
-      for i,t in zip(ps[s]["tids"],ps[s]["times"]):
-        update_I(I, rsit, s, i, t, pis)
-        for var, d in ((pi,dr_pi),
-                      (pa,dr_pa),
-                      (vs,dr_vs),
-                      (vsk,dr_vsk),
-                      (ci,dr_ci),
-                      (ca,dr_ca)):
-          var += delta_teta(s,i,t,d,k) # CORRECTION: the parameters are not EQUAL to detla_teta instead we add the delta to the original value
-          np.clip(var,-1,1,var)
+      for i,t in zip(reco.ps[s]["tids"] , reco.ps[s]["times"]):
+        reco.update(s,i,t,k)
       print time.time()-st
+      return
 
 if __name__ == "__main__":
-  doit()
+  reco = Recommender(20, 8, 30*60)
+  #reco.wist = helpers.memodict(reco.wist)
+  reco.rsit = helpers.memodict(reco.rsit)
+  doit(reco, 20)

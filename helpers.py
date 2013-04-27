@@ -13,10 +13,7 @@ def uniform_sample_i(pis):
 	return pis.searchsorted(random(), side='left')
 
 def getProba(pis, i):
-	if i > 0:
-		return pis[i] - pis[i-1]
-	else:
-		return pis[i]
+	return pis[i] - (pis[i-1] if i > 0 else 0)
 
 # set of items played on station s, between t-w and t
 def pstw(ps,(s,t,w)):
