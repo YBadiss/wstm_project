@@ -25,7 +25,7 @@ class Recommender:
 
     self.pis = init.pis(self.ps)
 
-    self.I = np.array([])
+    self.I = np.array([], dtype=np.int32)
 
     # Number of 
     self.n_l = n_l      # latent factors
@@ -63,7 +63,6 @@ class Recommender:
 
   def rsit(self, (s, array_i, t)):
     term2 = self.getRsitTerm2((s,t))
-    print array_i
     return (self.ci.take(array_i) + 
             self.ca.take(self.ai.take(array_i)) + 
             np.dot(self.pi.take(array_i, axis=0) + 
@@ -122,7 +121,7 @@ class Recommender:
   def update(self, s, i, t, k):
     self.update_I(s,i,t)
     delta = [(var, self.delta_teta(s,i,t,d,k)) for var,d in ((self.pi,self.dr_pi),(self.pa,self.dr_pa),(self.vs,self.dr_vs),(self.vsk,self.dr_vsk),(self.ci,self.dr_ci),(self.ca,self.dr_ca))]
-    [np.clip(var + d,-1,1,var) for var,d in delta]
+    [np.clip(var[i] + d,-1,1,var[i]) for var,d in delta]
 
 
 
