@@ -104,7 +104,7 @@ class Recommender:
   def dr_ca(self, s, i, t):
     return 1
 
-  def delta_teta(self, s, i, t, dr_teta, k):
+  def delta_teta(self, s, i, t, dr_teta, k):  
     return self.eta(k) * (dr_teta(s,i,t) - sum([self.wist((j,s,t)) * dr_teta(s,j,t) for j in self.I]))
 
   def update_I(self, s, i, t):

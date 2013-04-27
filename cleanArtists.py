@@ -14,7 +14,7 @@ def get_existing_tids(S):
         tids.extend([str(track["tid"]) for track in f_content])
   return tids
 
-def clean_ai():
+def clean_ai(path="./artists/"):
 	ai = inputs.ai()
 	S = inputs.S()
 	tids = get_existing_tids(S)
@@ -26,8 +26,8 @@ def clean_ai():
 			new_ai[tid] = ai[tid]
 		else:
 			ais_to_get.append(tid)
-	writeJSON("./artists/artist_map.json", new_ai)
-	writeJSON("./artists/to_get.json", ais_to_get)
+	writeJSON(path+"artist_map.json", new_ai)
+	writeJSON(path+"to_get.json", ais_to_get)
 
 def clean_S():
 	S = inputs.S()

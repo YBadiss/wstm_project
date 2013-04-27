@@ -1,9 +1,19 @@
 from be_smart import *
 from heapq import *
+import json
+import shutil
+import os
+import pdb
+import cleanArtists
 
 NB_TRACKS = 10
 NB_S = 2
 
+def loadJSON(filename):
+  if os.path.exists(filename):
+    with open(filename, "r") as fd:
+      return json.loads(fd.read())
+  return None
 
 r = Recommender(20, 8, 30*60)
 #print r.pis['real']
@@ -24,4 +34,23 @@ for s in xrange(len(r.ps)):
     heappush(master_heap, (s_avg_f,s,s_heap))
   else:
     heappushpop(master_heap, (s_avg_f,s,s_heap))
-print master_heap
+
+radios = {r.ids_to_s[s[1]]:[r.ids_to_item[t] for _,t in s[2]] for s in master_heap}
+print radios
+
+directory = './data_test/radios/'
+with open(directory+"radios.json","w") as fd:
+  fd.write(json.dumps([r for r in radios]))
+
+pdb.set_trace()
+for r in radios:
+  #shutil.copytree('./radios/radio%d/'%(r),directory+'radio%d/'%(r))
+  tracks = []
+  for filename in os.listdir('./radios/radio%d/'%(r)):
+    f_content = loadJSON('./radios/radio%d/'%(r) + filename) if filename.endswith(".json") else None
+    if f_content:
+      tracks.extend(f_content)
+  
+  os.makedirs(directory+'radio%d/'%(r))
+  with open(directory + 'radio%d/tracks.json'%(r),'w') as fd:
+    fd.write(json.dumps([track for track in tracks if track['tid'] in radios[r]]))
