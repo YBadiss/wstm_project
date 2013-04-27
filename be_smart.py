@@ -63,7 +63,8 @@ class Recommender:
 
   def rsit(self, (s, array_i, t)):
     term2 = self.getRsitTerm2((s,t))
-    return (self.ci.take(array_i) + self.ca[self.ai.take(array_i)] + np.dot(self.pi.take(array_i) + self.pa[self.ai.take(array_i)] , term2))
+    return (self.ci.take(array_i) + self.ca.take(self.ai.take(array_i)) + np.dot(self.pi.take(array_i) + self.pa.take(self.ai.take(array_i)),
+                                                                                  term2))
 
   def getRsitTerm2(self, (s, t)):
     return self.vs[s] + self.vsk[s, self.slot(t)] + (self.pi.take(self.pstw((s,t,self.w)), axis=0) + self.pa[self.ai.take(self.pstw((s,t,self.w)))]).sum()/np.sqrt(self.pstw((s,t,self.w)).size)
@@ -104,7 +105,9 @@ class Recommender:
   def update_I(self, s, i, t):
     MAX_SIZE = 1000
     if self.I.size < MAX_SIZE:
-      sum_j = (np.exp(self.rsit((s,self.I,t)))).sum()
+      sum_j = 0
+      if self.I.size > 0:
+        sum_j = (np.exp(self.rsit((s,self.I,t)))).sum()
       r_i = np.exp(self.rsit((s,[i],t)))
       while (self.I.size < MAX_SIZE) and (sum_j <= r_i):
         new_j = np.array([self.pis['cumm'].searchsorted(random(), side='left') for k in xrange(10)])
