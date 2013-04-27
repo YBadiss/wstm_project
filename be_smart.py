@@ -116,8 +116,6 @@ delta_teta = lambda s,i,t,dr_teta,k: eta(k) * (dr_teta(s,i,t) - sum([wist((j,s,t
 def doit():
   global S,I,ps,pi,dr_pi,pa,dr_pa,vs,dr_vs,vsk,dr_vsk,ci,dr_ci,ca,dr_ca,rsit
   STEP_CNT = 20
-  cap = np.vectorize(lambda x: max(min(x,1),-1))
-
   for k in xrange(1, STEP_CNT + 1):
     print "Step %d"%(k) 
     for s in S:
@@ -136,9 +134,8 @@ def doit():
                       (ci,dr_ci),
                       (ca,dr_ca)):
           var += delta_teta(s,i,t,d,k) # CORRECTION: the parameters are not EQUAL to detla_teta instead we add the delta to the original value
-          var = cap(var)
+          np.clip(var,-1,1,var)
       print time.time()-st
-      #return  
 
 if __name__ == "__main__":
   doit()

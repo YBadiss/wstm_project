@@ -40,3 +40,4 @@ radios/*
 build/
 cython_memo/
 tmp/
+profiles/

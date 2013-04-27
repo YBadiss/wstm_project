@@ -6,9 +6,8 @@ import os.path
 DEBUG_MODE = True
 
 def retrieve_store(filename, value):
-    if os.path.exists(filename):
-      value = np.load(filename)
-      print "BITCH"
+    if os.path.exists(filename+".npy"):
+      value = np.load(filename+".npy")
     else:
       np.save(filename,value)
     return value
