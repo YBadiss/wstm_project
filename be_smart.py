@@ -121,13 +121,18 @@ class Recommender:
 
   def update(self, s, i, t, k):
     self.update_I(s,i,t)
-    np.clip(self.pi[i] + self.delta_teta(s,i,t,self.dr_pi,k), -1, 1, self.pi[i])
-    np.clip(self.pa[self.ai[i]] + self.delta_teta(s,i,t,self.dr_pa,k), -1, 1, self.pa[self.ai[i]])
-    np.clip(self.vs[s] + self.delta_teta(s,i,t,self.dr_vs,k), -1, 1, self.vs[s])
-    np.clip(self.vsk[s, self.time_slots[t]] + self.delta_teta(s,i,t,self.dr_vsk,k), -1, 1, self.vsk[s, self.time_slots[t]])
+    self.pi[i] += self.delta_teta(s,i,t,self.dr_pi,k)
+    self.pa[self.ai[i]] += self.delta_teta(s,i,t,self.dr_pa,k)
+    self.vs[s] += self.delta_teta(s,i,t,self.dr_vs,k)
+    self.vsk[s, self.time_slots[t]] += self.delta_teta(s,i,t,self.dr_vsk,k)
     self.ci[i] += self.delta_teta(s,i,t,self.dr_ci,k)
-    self.ci[i] = min(max(self.ci[i],-1),1)
     self.ca[i] += self.delta_teta(s,i,t,self.dr_ca,k)
+
+    np.clip(self.pi[i], -1, 1, self.pi[i])
+    np.clip(self.pa[self.ai[i]], -1, 1, self.pa[self.ai[i]])
+    np.clip(self.vs[s], -1, 1, self.vs[s])
+    np.clip(self.vsk[s, self.time_slots[t]], -1, 1, self.vsk[s, self.time_slots[t]])
+    self.ci[i] = min(max(self.ci[i],-1),1)
     self.ca[i] = min(max(self.ca[i],-1),1)
 
 
