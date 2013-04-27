@@ -20,6 +20,11 @@ def clean_ai():
 	tids = get_existing_tids(S)
 	writeJSON("./artists/artist_map.json", {tid: ai[tid] for tid in tids})
 
+def clean_S():
+	S = inputs.S()
+	directory = "./radios/radio%d/"
+	writeJSON('./radios/radios.json', [s for s in S if os.path.exists(directory%(s))])
+
 def writeJSON(filename, content):
   if os.path.exists(filename):
     with open(filename, "w") as fd:
