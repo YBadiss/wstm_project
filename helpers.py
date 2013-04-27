@@ -22,6 +22,19 @@ def pack(l):
     dl[sl[i]] = i
   return sl,dl
 
+def get_time_slot(ps):
+  all_times = []
+  for s in ps:
+    all_times.extend(ps[s]['times'])
+  all_times = sorted(list(set(all_times)))
+  min_time = all_times[0]
+  max_time = all_times[len(all_times)-1]
+  ret = np.zeros(max_time-min_time+1, dtype=np.int32)
+  for time in all_times:
+    ret[time-min_time] = slot(time)
+  return ret
+
+
 def memodict2(f, ps):
   """ Memoization decorator for a function taking a single argument """
   class memodict(dict):
