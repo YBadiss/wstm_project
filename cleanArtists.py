@@ -18,7 +18,16 @@ def clean_ai():
 	ai = inputs.ai()
 	S = inputs.S()
 	tids = get_existing_tids(S)
-	writeJSON("./artists/artist_map.json", {tid: ai[tid] for tid in tids})
+	new_ai = {}
+	ais_to_get = []
+
+	for tid in tids:
+		if tid in ai:
+			new_ai[tid] = ai[tid]
+		else:
+			ais_to_get.append(tid)
+	writeJSON("./artists/artist_map.json", new_ai)
+	writeJSON("./artists/to_get.json", ais_to_get)
 
 def clean_S():
 	S = inputs.S()
