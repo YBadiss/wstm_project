@@ -9,12 +9,6 @@ def slot(t):
   hour = time.gmtime(t).tm_hour
   return int(hour / 3.0)
 
-def uniform_sample_i(pis):
-	return pis.searchsorted(random(), side='left')
-
-def getProba(pis, i):
-	return pis[i] - (pis[i-1] if i > 0 else 0)
-
 # set of items played on station s, between t-w and t
 def pstw(ps,(s,t,w)):
   start = ps[s]['times'].searchsorted(t-w, side='left')

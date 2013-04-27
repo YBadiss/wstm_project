@@ -61,36 +61,36 @@ class Recommender:
     self.pstw = helpers.memodict2(self.pstw, self.ps)
 
 
-  def rsit(self, (s, i, t)):
-    b = self.ci[i] + self.ca[self.ai[i]]
-    term1 = self.pi[i] + self.pa[self.ai[i]]
-    term2 = self.vs[s] + self.vsk[s, self.slot(t)] + (self.pi.take(self.pstw((s,t,self.w)), axis=0) + self.pa[self.ai.take(self.pstw((s,t,self.w)))]).sum()/np.sqrt(self.pstw((s,t,self.w)).size)
-    return np.dot(term1 , term2)
+  def rsit(self, (s, array_i, t)):
+    term2 = self.getRsitTerm2((s,t))
+    return (self.ci.take(array_i) + self.ca[self.ai.take(array_i)] + np.dot(self.pi.take(array_i) + self.pa[self.ai.take(array_i)] , term2))
 
-  def wist(self, (I, i,s,t)):
-    num = np.exp(self.rsit((s,i,t))) / helpers.getProba(self.pis,i)
-    denom = sum([np.exp(self.rsit((s,tid,t))) / helpers.getProba(self.pis,tid) for tid in self.I])
+  def getRsitTerm2(self, (s, t)):
+    return self.vs[s] + self.vsk[s, self.slot(t)] + (self.pi.take(self.pstw((s,t,self.w)), axis=0) + self.pa[self.ai.take(self.pstw((s,t,self.w)))]).sum()/np.sqrt(self.pstw((s,t,self.w)).size)
+
+  def wist(self, (i,s,t)):
+    num = np.exp(self.rsit((s,[i],t))) / self.pis['real'][i]
+    denom = (np.exp(self.rsit((s,self.I,t))) / self.pis['real'].take(self.I)).sum()
     return num/denom
 
   def eta(self, k):
     return 0.005 / float(k)
 
   def dr_pi(self, s, i, t):
-    term1 = self.vs[s] + self.vsk[s, self.slot(t)] + sum([self.pi[j] + self.pa[self.ai[j]] for j in self.pstw((s,t,self.w))]) / np.sqrt(self.pstw((s,t,self.w)).size)
-    if i in self.pstw((s,t,self.w)):
-      term2 = self.pi[i] + self.pa[self.ai[i]] / np.sqrt(self.pstw((s,t,self.w)).size)
-      return term1 + term2
-    else:
-      return term1
+    return self.vs[s] + self.vsk[s, self.slot(t)] + self.pi[i] + sum([self.pi[j] + self.pa[self.ai[j]] for j in self.pstw((s,t,self.w))]) / np.sqrt(self.pstw((s,t,self.w)).size)
+    # term2 = self.pi[i] + self.pa[self.ai[i]] / np.sqrt(self.pstw((s,t,self.w)).size)
+    # return term1 + term2
 
   def dr_pa(self, s, i, t):
-    return self.dr_pa(s,i,t)
+    return self.vs[s] + self.vsk[s, self.slot(t)] + self.pa[self.ai[i]] + sum([self.pi[j] + self.pa[self.ai[j]] for j in self.pstw((s,t,self.w))]) / np.sqrt(self.pstw((s,t,self.w)).size)
+    # term2 = self.pi[i] + self.pa[self.ai[i]] / np.sqrt(self.pstw((s,t,self.w)).size)
+    # return term1 + term2
 
   def dr_vs(self, s, i, t):
     return self.pi[i] + self.pa[self.ai[i]]
 
   def dr_vsk(self, s, i, t):
-    return self.dr_vs(s,i,t)
+    return self.pi[i] + self.pa[self.ai[i]]
 
   def dr_ci(self, s, i, t):
     return 1
@@ -99,22 +99,22 @@ class Recommender:
     return 1
 
   def delta_teta(self, s, i, t, dr_teta, k):
-    return self.eta(k) * (dr_teta(s,i,t) - sum([self.wist((self.I, j,s,t)) * dr_teta(s,j,t) for j in self.I]))
+    return self.eta(k) * (dr_teta(s,i,t) - sum([self.wist((j,s,t)) * dr_teta(s,j,t) for j in self.I]))
 
   def update_I(self, s, i, t):
     MAX_SIZE = 1000
     if self.I.size < MAX_SIZE:
-      sum_j = sum([np.exp(self.rsit((s,j,t))) for j in self.I])
-      r_i = np.exp(self.rsit((s,i,t)))
+      sum_j = (np.exp(self.rsit((s,self.I,t)))).sum()
+      r_i = np.exp(self.rsit((s,[i],t)))
       while (self.I.size < MAX_SIZE) and (sum_j <= r_i):
-        new_j = np.array([helpers.uniform_sample_i(self.pis) for k in xrange(10)])
-        sum_j += sum([np.exp(self.rsit((s,j,t))) for j in new_j])
+        new_j = np.array([self.pis['cumm'].searchsorted(random(), side='left') for k in xrange(10)])
+        sum_j += (np.exp(self.rsit((s,new_j,t)))).sum()
         self.I = np.concatenate([self.I,new_j])
 
   def update(self, s, i, t, k):
     self.update_I(s,i,t)
-    delta = [(var, self.delta_teta(s,i,t,d,k)) for var,d in (((self.pi,self.pa),self.dr_pi) , ((self.vs,self.vsk),self.dr_vs) , ((self.ci,self.ca),self.dr_ci))]
-    [(np.clip(var1 + d,-1,1,var1), np.clip(var2 + d,-1,1,var2)) for ((var1,var2),d) in delta]
+    delta = [(var, self.delta_teta(s,i,t,d,k)) for var,d in ((self.pi,self.dr_pi),(self.pa,self.dr_pa),(self.vs,self.dr_vs),(self.vsk,self.dr_vsk),(self.ci,self.dr_ci),(self.ca,self.dr_ca))]
+    [np.clip(var + d,-1,1,var) for var,d in delta]
 
 
 
@@ -134,5 +134,6 @@ def doit(reco, step_cnt):
 if __name__ == "__main__":
   reco = Recommender(20, 8, 30*60)
   #reco.wist = helpers.memodict(reco.wist)
-  reco.rsit = helpers.memodict(reco.rsit)
+  #reco.rsit = helpers.memodict(reco.rsit)
+  reco.getRsitTerm2 = helpers.memodict(reco.getRsitTerm2)
   doit(reco, 20)
