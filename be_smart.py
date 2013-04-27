@@ -73,6 +73,7 @@ bi = lambda i: ci[i] + ca[ai[i]]
 
 # affinity function
 #rsit = lambda ((s,i,t)): bi(i) + np.dot(np.transpose(qi(i)),(vs[s] + vsk[s, slot(t)] + sum([qi(j) for j in pstw((s,t,w))])/math.sqrt(len(pstw((s,t,w))))))
+#rsit = lambda ((s,i,t)): ci[i] + ca[ai[i]] + np.dot(np.transpose(pi[i] + pa[ai[i]]),(vs[s] + vsk[s, slot(t)] + (pi.take(pstw((s,t,w)), axis=0) + pa[ai.take(pstw((s,t,w)))]).sum()/np.sqrt(pstw((s,t,w)).size)))
 rsit = lambda ((s,i,t)): ci[i] + ca[ai[i]] + np.dot(np.transpose(pi[i] + pa[ai[i]]),(vs[s] + vsk[s, slot(t)] + (pi.take(pstw((s,t,w)), axis=0) + pa[ai.take(pstw((s,t,w)))]).sum()/np.sqrt(pstw((s,t,w)).size)))
 rsit = helpers.memodict(rsit)
 
@@ -103,10 +104,13 @@ def update_I(I, rsit, s, i, t, pis):
 eta = lambda k: 0.005 / float(k)
 
 # differenciation
-dr_pi = lambda s,i,t: np.transpose((vs[s] + vsk[s, slot(t)] + sum([qi(j) for j in pstw((s,t,w))])/math.sqrt(len(pstw((s,t,w)))))) + np.transpose(qi(i))*(1/math.sqrt(len(pstw((s,t,w)))) if i in pstw((s,t,w)) else 0)
-dr_pa = lambda s,i,t: np.transpose((vs[s] + vsk[s, slot(t)] + sum([qi(j) for j in pstw((s,t,w))])/math.sqrt(len(pstw((s,t,w)))))) + np.transpose(qi(i))*(1/math.sqrt(len(pstw((s,t,w)))) if i in pstw((s,t,w)) else 0)
-dr_vs = lambda s,i,t: np.transpose(qi(i))
-dr_vsk = lambda s,i,t: np.transpose(qi(i))
+#dr_pi = lambda s,i,t: np.transpose((vs[s] + vsk[s, slot(t)] + (pi.take(pstw((s,t,w)), axis=0) + pa[ai.take(pstw((s,t,w)))]).sum()/np.sqrt(pstw((s,t,w)).size))) + (np.transpose(pi[i] + pa[ai[i]])*1/np.sqrt(pstw((s,t,w)).size) if i in pstw((s,t,w)) else 0)
+#dr_pa = lambda s,i,t: np.transpose((vs[s] + vsk[s, slot(t)] + (pi.take(pstw((s,t,w)), axis=0) + pa[ai.take(pstw((s,t,w)))]).sum()/np.sqrt(pstw((s,t,w)).size))) + (np.transpose(pi[i] + pa[ai[i]])*1/np.sqrt(pstw((s,t,w)).size) if i in pstw((s,t,w)) else 0)
+
+dr_pi = lambda s,i,t: np.transpose((vs[s] + vsk[s, slot(t)] + sum([pi[j] + pa[ai[j]] for j in pstw((s,t,w))])/np.sqrt(pstw((s,t,w)).size))) + np.transpose(qi(i))*(1/np.sqrt(pstw((s,t,w)).size) if i in pstw((s,t,w)) else 0)
+dr_pa = lambda s,i,t: np.transpose((vs[s] + vsk[s, slot(t)] + sum([pi[j] + pa[ai[j]] for j in pstw((s,t,w))])/np.sqrt(pstw((s,t,w)).size))) + np.transpose(qi(i))*(1/np.sqrt(pstw((s,t,w)).size) if i in pstw((s,t,w)) else 0)
+dr_vs = lambda s,i,t: np.transpose(pi[i] + pa[ai[i]])
+dr_vsk = lambda s,i,t: np.transpose(pi[i] + pa[ai[i]])
 dr_ci = lambda s,i,t: 1
 dr_ca = lambda s,i,t: 1
 
