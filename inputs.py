@@ -13,7 +13,7 @@ def adapt_ai(ai, a_to_ids, ids_to_item):
 
 def S():
   TEST_RADIOS = [10, 16, 203, 264, 287]
-  return TEST_RADIOS if DEBUG_MODE else loadJSON("./radios/radios.json")
+  return TEST_RADIOS if config.DEBUG_MODE else loadJSON("./radios/radios.json")
 
 def adapt_S(S, s_to_ids):
   return np.array([s_to_ids[s] for s in S])
