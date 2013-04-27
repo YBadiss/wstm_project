@@ -35,6 +35,5 @@ def clean_S():
 	writeJSON('./radios/radios.json', [s for s in S if os.path.exists(directory%(s))])
 
 def writeJSON(filename, content):
-  if os.path.exists(filename):
-    with open(filename, "w") as fd:
-      fd.write(json.dumps(content))
+  with open(filename, "w") as fd:
+    fd.write(json.dumps(content))
