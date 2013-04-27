@@ -6,8 +6,8 @@ import os
 import cleanArtists
 import scrap
 
-NB_TRACKS = 10
-NB_S = 2
+NB_TRACKS = 100
+NB_S = 15
 
 r = Recommender(20, 8, 30*60)
 #print r.pis['real']
