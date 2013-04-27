@@ -1,37 +1,29 @@
 from be_smart import *
-import inputs
 from heapq import *
 import json
 import shutil
 import os
-import pdb
+import cleanArtists
+import scrap
 
 NB_TRACKS = 10
 NB_S = 2
 
-def loadJSON(filename):
-  if os.path.exists(filename):
-    with open(filename, "r") as fd:
-      return json.loads(fd.read())
-  return None
+r = Recommender(20, 8, 30*60)
+#print r.pis['real']
 
-def clean_ai(path="./artists/"):
-  ai = inputs.ai()
-  S = inputs.S()
-  tids = get_existing_tids(S)
+def clean_artists(S, tids):
+  ai = inputs.loadJSON('./artists/artist_map.json')
   new_ai = {}
   ais_to_get = []
 
   for tid in tids:
-    if tid in ai:
-      new_ai[tid] = ai[tid]
+    if str(tid) in ai:
+      new_ai[str(tid)] = ai[str(tid)]
     else:
-      ais_to_get.append(tid)
-  writeJSON(path+"artist_map.json", new_ai)
-  writeJSON(path+"to_get.json", ais_to_get)
-
-r = Recommender(20, 8, 30*60)
-#print r.pis['real']
+      ais_to_get.append(str(tid))
+  cleanArtists.writeJSON("./data_test/artists/artist_map.json", new_ai)
+  cleanArtists.writeJSON("./data_test/artists/to_get.json", ais_to_get)
 
 
 master_heap = []
@@ -57,17 +49,19 @@ directory = './data_test/radios/'
 with open(directory+"radios.json","w") as fd:
   fd.write(json.dumps([r for r in radios]))
 
-pdb.set_trace()
+tids = []
 for r in radios:
   #shutil.copytree('./radios/radio%d/'%(r),directory+'radio%d/'%(r))
   tracks = []
   for filename in os.listdir('./radios/radio%d/'%(r)):
-    f_content = loadJSON('./radios/radio%d/'%(r) + filename) if filename.endswith(".json") else None
+    f_content = inputs.loadJSON('./radios/radio%d/'%(r) + filename) if filename.endswith(".json") else None
     if f_content:
       tracks.extend(f_content)
-  
   os.makedirs(directory+'radio%d/'%(r))
   with open(directory + 'radio%d/tracks.json'%(r),'w') as fd:
     fd.write(json.dumps([track for track in tracks if track['tid'] in radios[r]]))
+  tids.extend([t['tid'] for t in tracks])
 
-  clean_ai('./data_test/artists/')
+clean_artists([r for r in radios], tids)
+
+scrap.get_track_artists('./data_test/artists/to_get.json')
