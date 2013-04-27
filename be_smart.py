@@ -54,7 +54,8 @@ class Recommender:
     self.ca = init.ca(self.n_a)
 
     # slot time
-    self.slot = helpers.slot
+    self.time_slots , self.ps = helpers.get_time_slot(self.ps)
+
 
     # set of items played on station s, between t-w and t
     self.pstw = helpers.pstw # hash table of hash table of sets
@@ -71,7 +72,7 @@ class Recommender:
               term2))
 
   def getRsitTerm2(self, (s, t)):
-    return self.vs[s] + self.vsk[s, self.slot(t)] + (self.pi.take(self.pstw((s,t,self.w)), axis=0) + self.pa.take(self.ai.take(self.pstw((s,t,self.w))),axis=0)).sum()/np.sqrt(self.pstw((s,t,self.w)).size)
+    return self.vs[s] + self.vsk[s, self.time_slots[t]] + (self.pi.take(self.pstw((s,t,self.w)), axis=0) + self.pa.take(self.ai.take(self.pstw((s,t,self.w))),axis=0)).sum()/np.sqrt(self.pstw((s,t,self.w)).size)
 
   def wist(self, (i,s,t)):
     num = np.exp(self.rsit((s,[i],t))) / self.pis['real'][i]
@@ -82,12 +83,12 @@ class Recommender:
     return 0.005 / float(k)
 
   def dr_pi(self, s, i, t):
-    return self.vs[s] + self.vsk[s, self.slot(t)] + self.pi[i] + sum([self.pi[j] + self.pa[self.ai[j]] for j in self.pstw((s,t,self.w))]) / np.sqrt(self.pstw((s,t,self.w)).size)
+    return self.vs[s] + self.vsk[s, self.time_slots[t]] + self.pi[i] + sum([self.pi[j] + self.pa[self.ai[j]] for j in self.pstw((s,t,self.w))]) / np.sqrt(self.pstw((s,t,self.w)).size)
     # term2 = self.pi[i] + self.pa[self.ai[i]] / np.sqrt(self.pstw((s,t,self.w)).size)
     # return term1 + term2
 
   def dr_pa(self, s, i, t):
-    return self.vs[s] + self.vsk[s, self.slot(t)] + self.pa[self.ai[i]] + sum([self.pi[j] + self.pa[self.ai[j]] for j in self.pstw((s,t,self.w))]) / np.sqrt(self.pstw((s,t,self.w)).size)
+    return self.vs[s] + self.vsk[s, self.time_slots[t]] + self.pa[self.ai[i]] + sum([self.pi[j] + self.pa[self.ai[j]] for j in self.pstw((s,t,self.w))]) / np.sqrt(self.pstw((s,t,self.w)).size)
     # term2 = self.pi[i] + self.pa[self.ai[i]] / np.sqrt(self.pstw((s,t,self.w)).size)
     # return term1 + term2
 
@@ -120,9 +121,14 @@ class Recommender:
 
   def update(self, s, i, t, k):
     self.update_I(s,i,t)
-    delta = [(var, self.delta_teta(s,i,t,d,k)) for var,d in ((self.pi,self.dr_pi),(self.pa,self.dr_pa),(self.vs,self.dr_vs),(self.vsk,self.dr_vsk),(self.ci,self.dr_ci),(self.ca,self.dr_ca))]
-    [np.clip(var[i] + d,-1,1,var[i]) for var,d in delta]
-
+    np.clip(self.pi[i] + self.delta_teta(s,i,t,self.dr_pi,k), -1, 1, self.pi[i])
+    np.clip(self.pa[self.ai[i]] + self.delta_teta(s,i,t,self.dr_pa,k), -1, 1, self.pa[self.ai[i]])
+    np.clip(self.vs[s] + self.delta_teta(s,i,t,self.dr_vs,k), -1, 1, self.vs[s])
+    np.clip(self.vsk[s, self.time_slots[t]] + self.delta_teta(s,i,t,self.dr_vsk,k), -1, 1, self.vsk[s, self.time_slots[t]])
+    self.ci[i] += self.delta_teta(s,i,t,self.dr_ci,k)
+    self.ci[i] = min(max(self.ci[i],-1),1)
+    self.ca[i] += self.delta_teta(s,i,t,self.dr_ca,k)
+    self.ca[i] = min(max(self.ca[i],-1),1)
 
 
 # learning

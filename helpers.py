@@ -32,7 +32,9 @@ def get_time_slot(ps):
   ret = np.zeros(max_time-min_time+1, dtype=np.int32)
   for time in all_times:
     ret[time-min_time] = slot(time)
-  return ret
+  for s in ps:
+    ps[s]['times'] -= min_time
+  return ret, ps
 
 
 def memodict2(f, ps):
