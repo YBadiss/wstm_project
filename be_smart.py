@@ -73,7 +73,7 @@ bi = lambda i: ci[i] + ca[ai[i]]
 
 # affinity function
 #rsit = lambda ((s,i,t)): bi(i) + np.dot(np.transpose(qi(i)),(vs[s] + vsk[s, slot(t)] + sum([qi(j) for j in pstw((s,t,w))])/math.sqrt(len(pstw((s,t,w))))))
-rsit = lambda ((s,i,t)): bi(i) + np.dot(np.transpose(qi(i)),(vs[s] + vsk[s, slot(t)] + (pi.take(pstw((s,t,w)), axis=0) + pa[ai.take(pstw((s,t,w)))]).sum()/math.sqrt(len(pstw((s,t,w))))))
+rsit = lambda ((s,i,t)): ci[i] + ca[ai[i]] + np.dot(np.transpose(pi[i] + pa[ai[i]]),(vs[s] + vsk[s, slot(t)] + (pi.take(pstw((s,t,w)), axis=0) + pa[ai.take(pstw((s,t,w)))]).sum()/np.sqrt(pstw((s,t,w)).size)))
 rsit = helpers.memodict(rsit)
 
 # probability that the item i will be played on station s at time t
