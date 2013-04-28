@@ -113,7 +113,7 @@ class Recommender:
     return self.eta(k) * (dr_teta((s,i,t)) - sum([self.wist((j,s,t)) * dr_teta((s,j,t)) for j in self.I]))
 
   def update_I(self, s, i, t):
-    MAX_SIZE = 1000
+    MAX_SIZE = 100
     if self.I.size < MAX_SIZE:
       sum_j = 0
       if self.I.size > 0:
