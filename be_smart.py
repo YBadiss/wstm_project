@@ -7,6 +7,8 @@ import sys, config
 import time, pdb
 from random import random
 
+sys.setrecursionlimit(10000)
+
 class Recommender:
   def __init__(self, n_l, n_slots, w):
     self.ai = inputs.ai() # simple hash table tid : aid
@@ -71,10 +73,13 @@ class Recommender:
               self.ai.take(array_i),axis=0),
               term2))
 
-  def getRsitTerm2(self, (s, t)):
-    return self.vs[s] + self.vsk[s, self.time_slots[t]] + (self.pi.take(self.pstw((s,t,self.w)), axis=0) + self.pa.take(self.ai.take(self.pstw((s,t,self.w))),axis=0)).sum()/np.sqrt(self.pstw((s,t,self.w)).size)
+  def pstw_sum_base(self, (s, t)):
+    return (self.pi.take(self.pstw((s,t,self.w)), axis=0).sum() + self.pa.take(self.ai.take(self.pstw((s,t,self.w))),axis=0).sum())/np.sqrt(self.pstw((s,t,self.w)).size)
 
-  def wist(self, (i,s,t)):
+  def getRsitTerm2(self, (s, t)):
+    return self.vs[s] + self.vsk[s, self.time_slots[t]] + self.pstw_sum((s,t))
+
+  def wist_base(self, (i,s,t)):
     num = np.exp(self.rsit((s,[i],t))) / self.pis['real'][i]
     denom = (np.exp(self.rsit((s,self.I,t))) / self.pis['real'].take(self.I)).sum()
     return num/denom
@@ -82,30 +87,30 @@ class Recommender:
   def eta(self, k):
     return 0.005 / float(k)
 
-  def dr_pi(self, s, i, t):
-    return self.vs[s] + self.vsk[s, self.time_slots[t]] + self.pi[i] + sum([self.pi[j] + self.pa[self.ai[j]] for j in self.pstw((s,t,self.w))]) / np.sqrt(self.pstw((s,t,self.w)).size)
+  def dr_pi_base(self, (s, i, t)):
+    return self.vs[s] + self.vsk[s, self.time_slots[t]] + self.pi[i] + self.pstw_sum((s,t))
     # term2 = self.pi[i] + self.pa[self.ai[i]] / np.sqrt(self.pstw((s,t,self.w)).size)
     # return term1 + term2
 
-  def dr_pa(self, s, i, t):
-    return self.vs[s] + self.vsk[s, self.time_slots[t]] + self.pa[self.ai[i]] + sum([self.pi[j] + self.pa[self.ai[j]] for j in self.pstw((s,t,self.w))]) / np.sqrt(self.pstw((s,t,self.w)).size)
+  def dr_pa_base(self, (s, i, t)):
+    return self.vs[s] + self.vsk[s, self.time_slots[t]] + self.pa[self.ai[i]] + self.pstw_sum((s,t))
     # term2 = self.pi[i] + self.pa[self.ai[i]] / np.sqrt(self.pstw((s,t,self.w)).size)
     # return term1 + term2
 
-  def dr_vs(self, s, i, t):
+  def dr_vs_base(self, (s, i, t)):
     return self.pi[i] + self.pa[self.ai[i]]
 
-  def dr_vsk(self, s, i, t):
+  def dr_vsk_base(self, (s, i, t)):
     return self.pi[i] + self.pa[self.ai[i]]
 
-  def dr_ci(self, s, i, t):
+  def dr_ci(self, (s, i, t)):
     return 1
 
-  def dr_ca(self, s, i, t):
+  def dr_ca(self, (s, i, t)):
     return 1
 
   def delta_teta(self, s, i, t, dr_teta, k):  
-    return self.eta(k) * (dr_teta(s,i,t) - sum([self.wist((j,s,t)) * dr_teta(s,j,t) for j in self.I]))
+    return self.eta(k) * (dr_teta((s,i,t)) - sum([self.wist((j,s,t)) * dr_teta((s,j,t)) for j in self.I]))
 
   def update_I(self, s, i, t):
     MAX_SIZE = 1000
@@ -121,20 +126,28 @@ class Recommender:
 
   def update(self, s, i, t, k):
     self.update_I(s,i,t)
-    self.pi[i] += self.delta_teta(s,i,t,self.dr_pi,k)
-    self.pa[self.ai[i]] += self.delta_teta(s,i,t,self.dr_pa,k)
-    self.vs[s] += self.delta_teta(s,i,t,self.dr_vs,k)
-    self.vsk[s, self.time_slots[t]] += self.delta_teta(s,i,t,self.dr_vsk,k)
-    self.ci[i] += self.delta_teta(s,i,t,self.dr_ci,k)
-    self.ca[i] += self.delta_teta(s,i,t,self.dr_ca,k)
+    dpi = self.delta_teta(s,i,t,self.dr_pi,k)
+    dpa = self.delta_teta(s,i,t,self.dr_pa,k)
+    dvs = self.delta_teta(s,i,t,self.dr_vs,k)
+    dvsk = self.delta_teta(s,i,t,self.dr_vsk,k)
+    dci = self.delta_teta(s,i,t,self.dr_ci,k)
+    dca = self.delta_teta(s,i,t,self.dr_ca,k)
 
-    np.clip(self.pi[i], -1, 1, self.pi[i])
-    np.clip(self.pa[self.ai[i]], -1, 1, self.pa[self.ai[i]])
-    np.clip(self.vs[s], -1, 1, self.vs[s])
-    np.clip(self.vsk[s, self.time_slots[t]], -1, 1, self.vsk[s, self.time_slots[t]])
-    self.ci[i] = min(max(self.ci[i],-1),1)
-    self.ca[i] = min(max(self.ca[i],-1),1)
+    np.clip(self.pi[i] + dpi, -1, 1, self.pi[i])
+    np.clip(self.pa[self.ai[i]] + dpa, -1, 1, self.pa[self.ai[i]])
+    np.clip(self.vs[s] + dvs, -1, 1, self.vs[s])
+    np.clip(self.vsk[s, self.time_slots[t]] + dvsk, -1, 1, self.vsk[s, self.time_slots[t]])
+    self.ci[i] = min(max(self.ci[i] + dci,-1),1)
+    self.ca[self.ai[i]] = min(max(self.ca[self.ai[i]] + dca,-1),1)
 
+    # flush memoizatoin
+    self.wist = helpers.memodict(self.wist_base)
+    self.dr_pi = helpers.memodict(self.dr_pi_base)
+    self.dr_pa = helpers.memodict(self.dr_pa_base)
+    self.dr_vs = helpers.memodict(self.dr_vs_base)
+    self.dr_vsk = helpers.memodict(self.dr_vsk_base)
+    self.getRsitTerm2 = helpers.memodict(self.getRsitTerm2)
+    self.pstw_sum = helpers.memodict(reco.pstw_sum_base)
 
 # learning
 def doit(reco, step_cnt):
@@ -147,11 +160,16 @@ def doit(reco, step_cnt):
       for i,t in zip(reco.ps[s]["tids"] , reco.ps[s]["times"]):
         reco.update(s,i,t,k)
       print time.time()-st
-      return
+      # return
 
 if __name__ == "__main__":
   reco = Recommender(20, 8, 30*60)
-  #reco.wist = helpers.memodict(reco.wist)
-  #reco.rsit = helpers.memodict(reco.rsit)
+  reco.wist = helpers.memodict(reco.wist_base)
+  reco.dr_pi = helpers.memodict(reco.dr_pi_base)
+  reco.dr_pa = helpers.memodict(reco.dr_pa_base)
+  reco.dr_vs = helpers.memodict(reco.dr_vs_base)
+  reco.dr_vsk = helpers.memodict(reco.dr_vsk_base)
   reco.getRsitTerm2 = helpers.memodict(reco.getRsitTerm2)
+  reco.pstw_sum = helpers.memodict(reco.pstw_sum_base)
+  #reco.rsit = helpers.memodict(reco.rsit)
   doit(reco, 20)
