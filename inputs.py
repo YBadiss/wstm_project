@@ -4,6 +4,7 @@ import json
 import os
 import config
 import numpy as np
+import pdb
 
 def ai():
   return loadJSON("./artists/artist_map.json")
@@ -38,6 +39,7 @@ def ps(S, item_to_ids, ids_to_s):
     np_tids = np_tids.take(indexer)
 
     ret_ps[s] = {"tids": np_tids, "times": np_times}
+  pdb.set_trace()
   return ret_ps
 
 def loadJSON(filename):

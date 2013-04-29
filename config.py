@@ -3,7 +3,7 @@
 import numpy as np
 import os.path
 
-DEBUG_MODE = True
+DEBUG_MODE = False
 
 def retrieve_store(filename, value):
     if os.path.exists(filename+".npy"):

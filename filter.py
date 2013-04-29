@@ -5,9 +5,10 @@ import shutil
 import os
 import cleanArtists
 import scrap
+import pdb
 
-NB_TRACKS = 100
-NB_S = 15
+NB_TRACKS = 10
+NB_S = 2
 
 r = Recommender(20, 8, 30*60)
 #print r.pis['real']
@@ -58,6 +59,8 @@ for r in radios:
     if f_content:
       tracks.extend(f_content)
   os.makedirs(directory+'radio%d/'%(r))
+  
+  pdb.set_trace()
   with open(directory + 'radio%d/tracks.json'%(r),'w') as fd:
     fd.write(json.dumps([track for track in tracks if track['tid'] in radios[r]]))
   tids.extend([t['tid'] for t in tracks])
