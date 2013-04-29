@@ -59,8 +59,6 @@ for r in radios:
     if f_content:
       tracks.extend(f_content)
   os.makedirs(directory+'radio%d/'%(r))
-  
-  pdb.set_trace()
   with open(directory + 'radio%d/tracks.json'%(r),'w') as fd:
     fd.write(json.dumps([track for track in tracks if track['tid'] in radios[r]]))
   tids.extend([t['tid'] for t in tracks])
