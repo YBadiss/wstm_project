@@ -20,6 +20,13 @@ def doHit(url, max_try = 5):
   sys.stderr.write("\nError " + url + " : " + err)
   return None
 
+def hit_track(tid):
+  hit = doHit("track/" + str(tid))
+  if hit:
+    return {tid: hit['artist']['id']}
+  else:
+    return None
+
 def hit_user(u_id):
   hit = doHit("user/" + str(u_id) + "/playlists")
   if hit:
@@ -234,6 +241,46 @@ def parse_tracks(radio_file):
     print "End"
   writeArtistMap(artist_map)
 
+
+def get_tids(f):
+  if os.path.exists(f):
+    with open(f, "r") as fd:
+      return json.loads(fd.read())
+  return []
+
+def get_track_artists(tids_file):
+  #pdb.set_trace()
+  tids = get_tids(tids_file)
+  print time.asctime(time.localtime(time.time())),"- Starting with %d tracks..." % (len(tids))
+  p = Pool(100)
+  n = 0
+  ROUND_CNT = 200
+  artist_map = readArtistMap()
+  
+  try:
+    while n*ROUND_CNT < len(tids):
+      n += 1
+      out = p.map(hit_track, tids[(n-1)*ROUND_CNT : min(n*ROUND_CNT, len(tids))])
+      result = [e for e in out if e]
+      print "%d tracks actually hit."%(len(result))
+      for t in result:
+        artist_map.update(t)
+
+      print time.asctime(time.localtime(time.time())),"- End round %d:" % (n)
+      #pdb.set_trace()
+      # try:
+      #   if TorConn.isTimeForNewId():
+      #     TorConn.newTorId()
+      #     print "> New IP: " + urllib2.urlopen("http://api.externalip.net/ip/").read()
+      #   else:
+      #     print "Keep same IP"
+      # except:
+      #   pass
+      sys.stdout.flush()
+  except KeyboardInterrupt:
+    print "End"
+  writeArtistMap(artist_map)
+
 def readArtistMap():
   f = "./artists/artist_map.json"
   if os.path.exists(f):
@@ -248,14 +295,14 @@ def writeArtistMap(a_map):
     os.makedirs(d)
   with open(f, "w") as f:
     f.write(json.dumps(a_map))
-  
 
 if __name__ == "__main__":
   #parse_users()
   #parse_playlists()
   #parse_radios(60000)
   #hit_radio_tracks(6)
-  radio_file = "./radios/radios.json"
-  if not os.path.exists(radio_file):
-    parse_radios(radio_file)
-  parse_tracks(radio_file)
+  #radio_file = "./radios/radios.json"
+  #if not os.path.exists(radio_file):
+  #  parse_radios(radio_file)
+  #parse_tracks(radio_file)
+  get_track_artists('./artists/to_get.json')

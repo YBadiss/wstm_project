@@ -45,12 +45,15 @@ def pis(ps):
     c += Counter(l['tids'])
 
   cnt = 0
-  freqs = []
-  #tids = []
+  cumm = []
+  real = []
   l = float(sum(c.values()))
   for i,n in sorted(c.items()):
     cnt += n
-    freqs.append(cnt/l)
-    #tids.append(i)
-  return np.array(freqs, dtype=np.float64)
+    cumm.append(cnt/l)
+    real.append(n/l)
+
+  np_cumm = np.array(cumm, dtype=np.float64)
+  np_real = np.array(real, dtype=np.float64)
+  return {'cumm': np_cumm, 'real': np_real}
 

@@ -4,6 +4,7 @@ import json
 import os
 import config
 import numpy as np
+import pdb
 
 def ai():
   return loadJSON("./artists/artist_map.json")
@@ -11,9 +12,9 @@ def ai():
 def adapt_ai(ai, a_to_ids, ids_to_item):
   return np.array([a_to_ids[ai[str(item)]] for item in ids_to_item])
 
-def S(test = True):
+def S():
   TEST_RADIOS = [10, 16, 203, 264, 287]
-  return TEST_RADIOS if test else loadJSON("./radios/radios.json")
+  return TEST_RADIOS if config.DEBUG_MODE else loadJSON("./radios/radios.json")
 
 def adapt_S(S, s_to_ids):
   return np.array([s_to_ids[s] for s in S])
@@ -38,6 +39,7 @@ def ps(S, item_to_ids, ids_to_s):
     np_tids = np_tids.take(indexer)
 
     ret_ps[s] = {"tids": np_tids, "times": np_times}
+  pdb.set_trace()
   return ret_ps
 
 def loadJSON(filename):
@@ -45,5 +47,3 @@ def loadJSON(filename):
     with open(filename, "r") as fd:
       return json.loads(fd.read())
   return None
-
-
