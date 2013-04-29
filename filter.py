@@ -28,15 +28,15 @@ def clean_artists(S, tids):
 
 
 master_heap = []
-for s in xrange(len(r.ps)):
+for s in r.ps:
   s_heap = []
   for i in xrange(len(r.ps[s]['tids'])):
     track = r.ps[s]['tids'][i]
     freq = r.pis['real'][track]
     if len(s_heap) < NB_TRACKS:
-      heappush(s_heap,(freq,i))
+      heappush(s_heap,(freq,track))
     else :
-      heappushpop(s_heap, (freq,i))
+      heappushpop(s_heap, (freq,track))
   s_avg_f = sum([f for f,i in s_heap])/len(s_heap)
   if len(master_heap) < NB_S:
     heappush(master_heap, (s_avg_f,s,s_heap))
