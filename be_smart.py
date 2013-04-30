@@ -114,7 +114,7 @@ class Recommender:
     return self.eta(k) * (dr_teta((s,i,t)) - sum([self.wist((j,s,t)) * dr_teta((s,j,t)) for j in self.I]))
 
   def update_I(self, s, i, t):
-    MAX_SIZE = 100
+    MAX_SIZE = 200
     if self.I.size < MAX_SIZE:
       sum_j = 0
       if self.I.size > 0:
@@ -188,7 +188,7 @@ def first_call(step_cnt):
 def save(reco):
   folder = './saved/%d/'%(time.time())
   os.makedirs(folder)
-  np.save(folder+'wist',reco.pi)
+  np.save(folder+'pi',reco.pi)
   np.save(folder+'pa',reco.pa)
   np.save(folder+'vs',reco.vs)
   np.save(folder+'vsk',reco.vsk)
@@ -197,6 +197,9 @@ def save(reco):
   np.save(folder+'ids_to_s',reco.ids_to_s)
   np.save(folder+'ids_to_item',reco.ids_to_item)
   np.save(folder+'ids_to_a',reco.ids_to_a)
+  np.save(folder+'item_to_ids',reco.item_to_ids)
+  np.save(folder+'s_to_ids',reco.s_to_ids)
+  np.save(folder+'a_to_ids',reco.a_to_ids)
 
 if __name__ == "__main__":
   first_call(10)

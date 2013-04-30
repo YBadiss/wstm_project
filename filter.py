@@ -7,8 +7,8 @@ import cleanArtists
 import scrap
 import pdb
 
-NB_TRACKS = 500
-NB_S = 50
+# NB_TRACKS = 300
+NB_S = 150
 
 r = Recommender(20, 8, 30*60)
 #print r.pis['real']
@@ -29,30 +29,39 @@ def clean_artists(S, tids):
 
 master_heap = []
 for s in r.ps:
-  s_heap = []
-  for i in xrange(len(r.ps[s]['tids'])):
-    track = r.ps[s]['tids'][i]
-    freq = r.pis['real'][track]
-    if len(s_heap) < NB_TRACKS:
-      heappush(s_heap,(freq,track))
-    else :
-      heappushpop(s_heap, (freq,track))
-  s_avg_f = sum([f for f,i in s_heap])/len(s_heap)
   if len(master_heap) < NB_S:
-    heappush(master_heap, (s_avg_f,s,s_heap))
+    heappush(master_heap, (len(set(r.ps[s]['tids'])),s))
   else:
-    heappushpop(master_heap, (s_avg_f,s,s_heap))
+    heappushpop(master_heap, (len(set(r.ps[s]['tids'])),s))
 
-radios = {r.ids_to_s[s[1]]:[r.ids_to_item[t] for _,t in s[2]] for s in master_heap}
-print radios
+  # for i in xrange(len(r.ps[s]['tids'])):
+  #   track = r.ps[s]['tids'][i]
+  #   freq = r.pis['real'][track]
+  #   if len(s_heap) < NB_TRACKS:
+  #     heappush(s_heap,(freq,track))
+  #   else :
+  #     heappushpop(s_heap, (freq,track))
+  # s_avg_f = sum([f for f,i in s_heap])/len(s_heap)
+  # if len(master_heap) < NB_S:
+  #   heappush(master_heap, (s_avg_f,s,s_heap))
+  # else:
+  #   heappushpop(master_heap, (s_avg_f,s,s_heap))
+pdb.set_trace()
+arr = [int(r.ids_to_s[s]) for _,s in master_heap]
+with open('./radios/radios.json', 'w') as fd:
+  fd.write(json.dumps(arr))
 
-directory = './data_test/radios/'
-with open(directory+"radios.json","w") as fd:
-  fd.write(json.dumps([r for r in radios]))
+cleanArtists.clean_ai()
+
+# radios = {r.ids_to_s[s[1]]:[r.ids_to_item[t] for _,t in s[2]] for s in master_heap}
+# print radios
+
+# directory = './data_test/radios/'
+# with open(directory+"radios.json","w") as fd:
+#   fd.write(json.dumps([r for r in radios]))
 
 tids = []
 for r in radios:
-  #shutil.copytree('./radios/radio%d/'%(r),directory+'radio%d/'%(r))
   tracks = []
   for filename in os.listdir('./radios/radio%d/'%(r)):
     f_content = inputs.loadJSON('./radios/radio%d/'%(r) + filename) if filename.endswith(".json") else None
@@ -63,6 +72,6 @@ for r in radios:
     fd.write(json.dumps([track for track in tracks if track['tid'] in radios[r]]))
   tids.extend([t['tid'] for t in tracks])
 
-clean_artists([r for r in radios], tids)
+# clean_artists([r for r in radios], tids)
 
-scrap.get_track_artists('./data_test/artists/to_get.json')
+# scrap.get_track_artists('./data_test/artists/to_get.json')

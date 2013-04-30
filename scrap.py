@@ -267,19 +267,37 @@ def get_track_artists(tids_file):
         artist_map.update(t)
 
       print time.asctime(time.localtime(time.time())),"- End round %d:" % (n)
-      #pdb.set_trace()
-      # try:
-      #   if TorConn.isTimeForNewId():
-      #     TorConn.newTorId()
-      #     print "> New IP: " + urllib2.urlopen("http://api.externalip.net/ip/").read()
-      #   else:
-      #     print "Keep same IP"
-      # except:
-      #   pass
       sys.stdout.flush()
   except KeyboardInterrupt:
     print "End"
   writeArtistMap(artist_map)
+
+def hit_track_infos(tid):
+  hit = doHit("track/" + str(tid))
+  if hit:
+    return (tid, hit['title'], hit['artist']['name'])
+  else:
+    return None
+
+def get_track_infos(tids):
+  print time.asctime(time.localtime(time.time())),"- Starting with %d tracks..." % (len(tids))
+  p = Pool(50)
+  n = 0
+  ROUND_CNT = 200
+  res = []
+  try:
+    while n*ROUND_CNT < len(tids):
+      n += 1
+      out = p.map(hit_track_infos, tids[(n-1)*ROUND_CNT : min(n*ROUND_CNT, len(tids))])
+      result = [e for e in out if e]
+      print "%d tracks actually hit."%(len(result))
+      res.extend(result)
+
+      print time.asctime(time.localtime(time.time())),"- End round %d:" % (n)
+      sys.stdout.flush()
+  except KeyboardInterrupt:
+    print "End"
+  return res
 
 def readArtistMap():
   f = "./artists/artist_map.json"

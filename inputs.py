@@ -22,6 +22,7 @@ def adapt_S(S, s_to_ids):
 def ps(S, item_to_ids, ids_to_s):
   ret_ps = {}
   directory = "./radios/radio%d/"
+  no_artist = loadJSON('artists/to_get.json')
   for s in S:
     tids = []
     times = []
@@ -29,8 +30,8 @@ def ps(S, item_to_ids, ids_to_s):
     for filename in os.listdir(directory%(ids_to_s[s])):
       f_content = loadJSON(directory%(ids_to_s[s]) + filename) if filename.endswith(".json") else None
       if f_content:
-        tids.extend([item_to_ids[track["tid"]] for track in f_content])
-        times.extend([track["time"] for track in f_content])
+        tids.extend([item_to_ids[track["tid"]] for track in f_content if not str(track["tid"]) in no_artist])
+        times.extend([track["time"] for track in f_content if not str(track["tid"]) in no_artist])
 
     np_tids = np.array(tids, np.int32)
     np_times = np.array(times, np.int32)
